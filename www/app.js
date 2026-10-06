@@ -32,7 +32,7 @@ const MAX_PHOTOS = 8;
 // ================= ÉTAT =================
 const VIDE = { users: [], parents: [], eleves: [], enfants: [], emplois: [], absences: [], publications: [],
   reclamations: [], notifications: [], evenements: [], classes: [],
-  cantineInscriptions: [], cantineMenus: [] };
+  cantineReservations: [], cantineMenus: [] };
 let DB = { ...VIDE };     // copie locale des données reçues du serveur
 let user = null;          // utilisateur connecté
 let token = null;         // jeton de session
@@ -182,13 +182,11 @@ function ouvrirDepuisNotif(type, texte = '') {
   if (!page) return go('notifs');
   if (user.role === 'parent') {
     // L'enfant dont parle la notification (son nom, sinon sa classe : « emploi du temps de Grande section A ») ;
-    // menu de la cantine : un enfant inscrit
     const plusLongDabord = cle => DB.enfants.slice().sort((a, b) => b[cle].length - a[cle].length);
     const cite = plusLongDabord('nom').find(e => texte.includes(e.nom)) || plusLongDabord('classe').find(e => texte.includes(e.classe));
-    const enfantVise = cite || (type === 'cantine' && DB.enfants.find(e => inscriptionDe(e.id)));
-    if (enfantVise) enfantActif = enfantVise.id;
+    if (cite) enfantActif = cite.id;
   } else if (type === 'cantine') {
-    cantine.onglet = /menu/i.test(texte) ? 'menu' : 'inscrits';
+    cantine.onglet = /menu/i.test(texte) ? 'menu' : 'reservations';
   }
   go(page);
 }
@@ -444,6 +442,7 @@ function deconnecter() {
   enfantActif = null;
   photosPub = [];
   photoMenu = null;
+  choixCantine = {};
   photoEmploi = null;
   stocker('lamarelle-token', null);
   document.removeEventListener('click', premiereTouche, true);
@@ -1576,59 +1575,111 @@ function voirMdp(bouton) {
 }
 
 // ================= CANTINE SCOLAIRE =================
-// Le parent inscrit son enfant d'un appui : l'inscription est acceptée tout de suite.
-// L'administration envoie le menu de la semaine en photo (le nouveau remplace l'ancien) et voit la liste des inscrits.
-const cantine = { onglet: 'menu', filtreInscrits: '' };
+// L'administration envoie le menu de la semaine en photo, avec la semaine et les jours d'ouverture (le nouveau remplace l'ancien).
+// Le parent choisit alors, enfant par enfant, les jours où il mange à la cantine (modifiables jusqu'à la veille) ;
+// l'administration voit les repas réservés, jour par jour.
+const cantine = { onglet: 'menu', filtreClasse: '' };
 let photoMenu = null;            // photo du menu, pas encore envoyée
+let choixCantine = {};           // jours touchés mais pas encore enregistrés, par enfant : { eleveId: ['2026-10-13', …] }
 
-const inscriptionDe = id => DB.cantineInscriptions.find(c => c.eleveId === id);
+const JOURS_CANTINE = ['', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche'];
 const menuActuel = () => DB.cantineMenus[0] || null;   // un seul menu : le dernier envoyé
+const jjmm = iso => `${iso.slice(8, 10)}/${iso.slice(5, 7)}`;
+// Date (AAAA-MM-JJ) décalée de n jours ; numéro du jour (1 = lundi … 7 = dimanche)
+function plusJours(iso, n) { const d = new Date(iso + 'T12:00:00Z'); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); }
+const numeroJour = iso => (new Date(iso + 'T12:00:00Z').getUTCDay() + 6) % 7 + 1;
+const nomJour = iso => `${JOURS_CANTINE[numeroJour(iso)]} ${jjmm(iso)}`;
+// Jours d'ouverture de la semaine du menu : [{ nom: 'Lundi', date: '2026-10-13' }, …]
+const joursMenu = m => (m && m.lundi ? m.jours || [] : []).map(n => ({ nom: JOURS_CANTINE[n], date: plusJours(m.lundi, n - 1) }));
+const reserve = (eleveId, date) => DB.cantineReservations.some(r => r.eleveId === eleveId && r.jour === date);
+const joursReserves = (eleveId, jours) => jours.filter(j => reserve(eleveId, j.date)).map(j => j.date);
+
 function carteMenuSemaine(m) {
-  const url = urlFichier(m.photoId);
-  return `<div class="menu-semaine">${(m.photoType || '').startsWith('image/')
+  const url = urlFichier(m.photoId), jours = joursMenu(m);
+  return `${jours.length ? `<p class="small muted" style="margin-bottom:6px">Semaine du ${jjmm(jours[0].date)} au ${jjmm(jours[jours.length - 1].date)}
+      · ${jours.map(j => j.nom.slice(0, 3) + '.').join(' ')}</p>` : ''}
+    <div class="menu-semaine">${(m.photoType || '').startsWith('image/')
     ? `<img src="${url}" alt="Menu de la semaine" loading="lazy" onclick="voirPhoto('${url}')">`
     : `<a class="pub-pdf" href="${url}" target="_blank" rel="noopener">📄 ${esc(m.photoNom || 'Menu de la semaine')}</a>`}</div>
     <span class="small muted">Envoyé le ${esc(m.envoyeLe)}</span>`;
 }
 
-// ----- Espace Parents : inscription en un appui -----
-function inscrireCantine(eleveId) {
-  action(api('/cantine/inscriptions', { method: 'POST', body: { eleveId } }), 'Inscription à la cantine enregistrée ✔');
+// ----- Espace Parents : choix des jours de cantine -----
+function grilleCantine(e) {
+  const jours = joursMenu(menuActuel()), auj = aujourdhui(), prenom = esc(e.nom.split(' ')[0]);
+  const enregistres = joursReserves(e.id, jours), choix = choixCantine[e.id] || enregistres;
+  const ouverts = jours.filter(j => j.date > auj);
+  const change = choix.slice().sort().join() !== enregistres.slice().sort().join();
+  if (!jours.length) return vide("Le menu de la semaine n'a pas de jours de cantine.");
+  return `<p class="muted" style="margin-bottom:12px">Touchez les jours où <b>${prenom}</b> mange à la cantine, puis enregistrez.
+      ${ouverts.length ? 'Vous pouvez changer un jour jusqu\'à la veille.' : 'Les jours de cette semaine ne peuvent plus être changés.'}</p>
+    <div class="cantine-jours">${jours.map(j => {
+      const pris = choix.includes(j.date), ferme = j.date <= auj;
+      return `<button type="button" class="cantine-jour ${pris ? 'choisi' : ''}" aria-pressed="${pris}" ${ferme ? 'disabled' : ''}
+          onclick="basculerJourCantine('${e.id}','${j.date}')">
+        <span class="cj-nom">${j.nom}</span><span class="cj-date">${jjmm(j.date)}</span>
+        <span class="cj-etat">${pris ? '🍽️ Inscrit(e)' : 'Pas de cantine'}</span></button>`;
+    }).join('')}</div>
+    <div class="cantine-actions">
+      <span class="small muted">${choix.length} repas cette semaine${change ? ' · <b>pas encore enregistré</b>' : ''}</span>
+      ${ouverts.length ? `<button class="btn btn-light btn-sm" onclick="tousJoursCantine('${e.id}')">Tous les jours</button>
+      <button class="btn btn-primary" ${change ? '' : 'disabled'} onclick="enregistrerCantine('${e.id}', this)">✅ Enregistrer</button>` : ''}
+    </div>`;
 }
-function desinscrireCantine(id) {
-  const c = DB.cantineInscriptions.find(x => x.id === id), e = c && eleveDe(c.eleveId);
-  if (!c || !confirm(`Désinscrire ${e ? e.nom : "l'enfant"} de la cantine ?`)) return;
-  action(api('/cantine/inscriptions/' + id, { method: 'DELETE' }), 'Désinscription enregistrée');
+// Les jours touchés sont gardés jusqu'à « Enregistrer » ; seule la grille est redessinée (la page ne remonte pas)
+function majGrilleCantine(eleveId) {
+  const z = $('cantine-grille'), e = eleveDe(eleveId);
+  if (z && e) z.innerHTML = grilleCantine(e);
+}
+function basculerJourCantine(eleveId, date) {
+  const jours = joursMenu(menuActuel());
+  const choix = new Set(choixCantine[eleveId] || joursReserves(eleveId, jours));
+  choix.has(date) ? choix.delete(date) : choix.add(date);
+  choixCantine[eleveId] = [...choix];
+  majGrilleCantine(eleveId);
+}
+// « Tous les jours » : tous les jours encore modifiables (un 2e appui les enlève)
+function tousJoursCantine(eleveId) {
+  const jours = joursMenu(menuActuel()), auj = aujourdhui();
+  const ouverts = jours.filter(j => j.date > auj).map(j => j.date);
+  const choix = new Set(choixCantine[eleveId] || joursReserves(eleveId, jours));
+  const tous = ouverts.every(d => choix.has(d));
+  ouverts.forEach(d => (tous ? choix.delete(d) : choix.add(d)));
+  choixCantine[eleveId] = [...choix];
+  majGrilleCantine(eleveId);
+}
+async function enregistrerCantine(eleveId, bouton) {
+  const auj = aujourdhui(), choix = choixCantine[eleveId];
+  if (!choix) return;
+  bouton.disabled = true;
+  bouton.textContent = '⏳ Enregistrement…';
+  // Seuls les jours encore modifiables sont envoyés (les jours passés restent comme ils sont)
+  const r = await action(api('/cantine/reservations', { method: 'PUT', body: { eleveId, jours: choix.filter(d => d > auj) } }));
+  if (!r) return majGrilleCantine(eleveId);
+  delete choixCantine[eleveId];
+  rafraichir();
+  toast(r.jours.length ? `✔ Cantine : ${r.jours.length} jour(s) enregistré(s)` : '✔ Aucun jour de cantine cette semaine');
 }
 
 function vueCantineParent() {
   const e = enfant();
   if (!e) return sansEnfant();
-  const c = inscriptionDe(e.id), menu = menuActuel();
+  const menu = menuActuel(), prenom = esc(e.nom.split(' ')[0]);
   return selecteurEnfants()
-    + carte('🍽️ Cantine', c ? `
-      <div class="item-head"><strong>${esc(e.nom)}</strong><span class="badge badge-ok">✔ Inscrit(e)</span></div>
-      <p class="small muted">Inscrit(e) le ${esc(c.inscritLe)}</p>
-      <div class="profil-boutons" style="margin-top:12px">
-        <button class="btn btn-danger btn-sm" onclick="desinscrireCantine('${c.id}')">Désinscrire</button></div>` : `
-      <p class="muted" style="margin-bottom:12px">${esc(e.nom)} n'est pas inscrit(e) à la cantine.</p>
-      <button class="btn btn-primary" onclick="inscrireCantine('${e.id}')">✅ Inscrire ${esc(e.nom.split(' ')[0])} à la cantine</button>`)
+    + carte(`🍽️ Jours de cantine de ${prenom}`, menu
+      ? `<div id="cantine-grille">${grilleCantine(e)}</div>`
+      : vide("Le menu de la semaine n'a pas encore été envoyé : vous pourrez alors choisir les jours de cantine."))
     + carte('📅 Menu de la semaine', menu ? carteMenuSemaine(menu) : vide("Le menu de la semaine n'a pas encore été envoyé."));
 }
 
 function changerCantine(cle, v) { cantine[cle] = v; rafraichir(); }
-// Élèves inscrits, rangés par classe puis par nom
-function elevesInscrits(classe = '') {
-  const ordre = c => { const i = CLASSES.indexOf(c); return i < 0 ? 999 : i; };
-  return DB.eleves.filter(e => inscriptionDe(e.id) && (!classe || e.classe === classe))
-    .sort((a, b) => ordre(a.classe) - ordre(b.classe) || parNom(a, b));
+
+// ----- Administration : menu de la semaine (photo + semaine + jours d'ouverture), envoyé à tous les parents -----
+// Semaine proposée : la semaine en cours, ou la suivante à partir du vendredi
+function lundiParDefaut() {
+  const auj = aujourdhui(), n = numeroJour(auj);
+  return plusJours(auj, n >= 5 ? 8 - n : 1 - n);
 }
-function filtreClassesInscrits(cle) {
-  const classes = [...new Set(elevesInscrits().map(e => e.classe))];
-  return `<select onchange="changerCantine('${cle}',this.value)"><option value="">Toutes les classes</option>
-    ${classes.length ? optionsClasses(cantine[cle], classes) : ''}</select>`;
-}
-// ----- Administration : menu de la semaine (photo envoyée aux parents des enfants inscrits) -----
 async function choisirPhotoMenu(input) {
   const f = input.files[0];
   input.value = '';
@@ -1650,25 +1701,35 @@ function afficherPhotoMenu() {
 async function envoyerMenu(e) {
   e.preventDefault();
   if (!photoMenu) return toast('Prenez ou choisissez la photo du menu', 'err');
+  const jours = [...document.querySelectorAll('input[name="cm-jour"]:checked')].map(c => c.value);
+  if (!val('cm-lundi')) return toast('Choisissez la semaine du menu', 'err');
+  if (!jours.length) return toast('Cochez au moins un jour de cantine', 'err');
   const form = new FormData();
   form.append('fichier', photoMenu, photoMenu.name);
+  form.append('lundi', val('cm-lundi'));
+  form.append('jours', jours.join(','));
   const r = await envoyerFormulaire(e, '/cantine/menus', form);
   if (!r) return;
   photoMenu = null;
   rafraichir();
-  toast(r.parents ? `✔ Menu envoyé à ${r.parents} parent(s)` : "✔ Menu enregistré (aucun enfant inscrit pour l'instant)");
+  toast(`✔ Menu envoyé à ${r.parents} parent(s) : ils peuvent choisir les jours de cantine`);
 }
 function supprimerMenu() {
-  if (!confirm('Supprimer le menu de la semaine ? Les parents ne le verront plus.')) return;
+  if (!confirm('Supprimer le menu de la semaine ? Les parents ne le verront plus et ne pourront plus choisir de jours.')) return;
   action(api('/cantine/menus', { method: 'DELETE' }), 'Menu supprimé');
 }
 function ongletMenu() {
   const menu = menuActuel();
   return carte('📅 Envoyer le menu de la semaine', `
-      <p class="muted" style="margin-bottom:14px">Prenez en photo le menu de la semaine (ou choisissez une photo / un PDF) :
-        les parents des enfants inscrits le reçoivent tout de suite avec une notification.
+      <p class="muted" style="margin-bottom:14px">Prenez en photo le menu de la semaine (ou choisissez une photo / un PDF), indiquez la semaine
+        et les jours de cantine : tous les parents le reçoivent avec une notification et choisissent les jours de leur enfant.
         ${menu ? 'Le nouveau menu <b>remplace</b> automatiquement l\'ancien.' : ''}</p>
       <form class="grid-form" onsubmit="envoyerMenu(event)">
+        <div class="field"><label for="cm-lundi">Semaine du <span class="muted small">(lundi)</span></label>
+          <input type="date" id="cm-lundi" required value="${lundiParDefaut()}"></div>
+        <div class="field full"><label>Jours de cantine</label>
+          <div class="checks jours-ouverts">${[1, 2, 3, 4, 5, 6].map(n => `<label class="check">
+            <input type="checkbox" name="cm-jour" value="${n}" ${n <= 5 ? 'checked' : ''}> ${JOURS_CANTINE[n]}</label>`).join('')}</div></div>
         <div class="field full"><label>Photo du menu</label>
           <div class="profil-boutons">
             <label class="btn btn-primary upload-btn">📷 Prendre une photo
@@ -1684,29 +1745,42 @@ function ongletMenu() {
       : vide('Aucun menu envoyé.'));
 }
 
-// ----- Administration : liste des élèves inscrits -----
-function ongletInscrits() {
-  const liste = elevesInscrits(cantine.filtreInscrits);
-  return carte(`👧 Élèves inscrits à la cantine (${liste.length})`, `
-    <div class="filtres">${filtreClassesInscrits('filtreInscrits')}</div>
-    ${liste.length ? `<div class="table-wrap"><table>
-      <thead><tr><th>N°</th><th>Enfant</th><th>Classe</th><th>Inscrit par</th><th></th></tr></thead>
-      <tbody>${liste.map((e, i) => { const c = inscriptionDe(e.id); return `<tr><td>${i + 1}</td>
-        <td><span class="chip-lien">${avatar(e)}<strong>${esc(e.nom)}</strong></span></td>
-        <td>${esc(e.classe)}</td>
-        <td>${esc(c.parentNom || '—')}<br>${c.parentTel ? lienTel(c.parentTel) : ''}<br><span class="small muted">${esc(c.inscritLe)}</span></td>
-        <td><button class="btn btn-light btn-sm" onclick="desinscrireCantine('${c.id}')">Désinscrire</button></td></tr>`; }).join('')}
-      </tbody></table></div>`
-      : vide('Aucun enfant inscrit. Les parents inscrivent leur enfant depuis leur espace (page « Cantine »).')}`);
+// ----- Administration : repas réservés, jour par jour (aujourd'hui et les jours suivants) -----
+function reservationsAVenir(classe = '') {
+  const auj = aujourdhui();
+  return DB.cantineReservations.filter(r => r.jour >= auj).map(r => ({ ...r, eleve: eleveDe(r.eleveId) }))
+    .filter(r => r.eleve && (!classe || r.eleve.classe === classe));
+}
+function ongletReservations() {
+  const ordre = c => { const i = CLASSES.indexOf(c); return i < 0 ? 999 : i; };
+  const liste = reservationsAVenir(cantine.filtreClasse);
+  const classes = [...new Set(reservationsAVenir().map(r => r.eleve.classe))];
+  const jours = [...new Set(liste.map(r => r.jour))].sort();
+  return carte(`🍽️ Repas réservés par les parents (${liste.length})`, `
+    <div class="filtres"><select onchange="changerCantine('filtreClasse',this.value)"><option value="">Toutes les classes</option>
+      ${classes.length ? optionsClasses(cantine.filtreClasse, classes) : ''}</select></div>
+    ${jours.length ? jours.map(jour => {
+      const du = liste.filter(r => r.jour === jour).sort((a, b) => ordre(a.eleve.classe) - ordre(b.eleve.classe) || parNom(a.eleve, b.eleve));
+      return `<h4 class="jour-titre travail">${jour === aujourdhui() ? "Aujourd'hui · " : ''}${nomJour(jour)} — ${du.length} repas</h4>
+        <div class="table-wrap"><table>
+          <thead><tr><th>N°</th><th>Enfant</th><th>Classe</th><th>Choisi par</th></tr></thead>
+          <tbody>${du.map((r, i) => `<tr><td>${i + 1}</td>
+            <td><span class="chip-lien">${avatar(r.eleve)}<strong>${esc(r.eleve.nom)}</strong></span></td>
+            <td>${esc(r.eleve.classe)}</td>
+            <td>${esc(r.parentNom || '—')}${r.parentTel ? '<br>' + lienTel(r.parentTel) : ''}</td></tr>`).join('')}
+          </tbody></table></div>`;
+    }).join('')
+      : vide('Aucun repas réservé pour les prochains jours. Les parents choisissent les jours de cantine dans leur espace, après l\'envoi du menu.')}`);
 }
 
 function vueCantine() {
+  const nbAVenir = reservationsAVenir().length;
   const onglets = [['menu', '📅 Menu de la semaine'],
-    ['inscrits', `👧 Inscrits <span class="badge badge-blue">${DB.cantineInscriptions.length}</span>`]];
+    ["reservations", `🍽️ Réservations <span class="badge badge-blue" title="Repas réservés à partir d'aujourd'hui">${nbAVenir}</span>`]];
   if (!onglets.some(([k]) => k === cantine.onglet)) cantine.onglet = 'menu';
   const html = `<div class="onglets" role="tablist">${onglets.map(([k, t]) => `<button role="tab" aria-selected="${cantine.onglet === k}"
       class="${cantine.onglet === k ? 'actif' : ''}" onclick="changerCantine('onglet','${k}')">${t}</button>`).join('')}</div>`
-    + { menu: ongletMenu, inscrits: ongletInscrits }[cantine.onglet]();
+    + { menu: ongletMenu, reservations: ongletReservations }[cantine.onglet]();
   setTimeout(afficherPhotoMenu);   // photo du menu choisie avant un rafraîchissement
   return html;
 }
@@ -1829,7 +1903,7 @@ const VUES = {
     const enAttente = DB.reclamations.filter(x => x.statut !== 'Traitée').length;
     const stats = [['Élèves', DB.eleves.length], ['Classes', DB.classes.length],
       ["Absents aujourd'hui", new Set(absJour.map(a => a.eleveId)).size], ['Messages des parents en attente', enAttente],
-      ['Inscrits à la cantine', DB.cantineInscriptions.length]];
+      ["Repas à la cantine aujourd'hui", DB.cantineReservations.filter(r => r.jour === j).length]];
     // Appel du jour : classes déjà faites / à faire
     const appelFait = new Set(DB.absences.filter(a => a.date === j).map(a => a.classe));
     const coursJour = DB.publications.filter(p => p.date === j && p.type === 'cours');

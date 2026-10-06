@@ -130,22 +130,23 @@ CREATE TABLE IF NOT EXISTS reclamations (
 );
 
 -- ================= CANTINE SCOLAIRE =================
--- Inscription faite par le parent, en un appui : acceptée tout de suite
-CREATE TABLE IF NOT EXISTS cantine_inscriptions (
-  id          SERIAL PRIMARY KEY,
-  eleve_id    INTEGER NOT NULL UNIQUE REFERENCES eleves(id) ON DELETE CASCADE,
-  parent_id   INTEGER REFERENCES users(id) ON DELETE SET NULL,   -- parent qui a inscrit l'enfant
-  created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
-  updated_at  TIMESTAMPTZ NOT NULL DEFAULT now()
-);
-
--- Menu de la semaine : une seule photo (ou un PDF), envoyée aux parents des enfants inscrits ;
--- un nouveau menu remplace l'ancien
+-- Menu de la semaine : une seule photo (ou un PDF), envoyée à tous les parents ; un nouveau menu remplace l'ancien.
+-- Il dit quelle semaine (son lundi) et quels jours la cantine est ouverte (1 = lundi … 6 = samedi)
 CREATE TABLE IF NOT EXISTS cantine_semaines (
   photo_id   UUID PRIMARY KEY REFERENCES fichiers(id),
   cree_par   INTEGER REFERENCES users(id) ON DELETE SET NULL,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+-- Repas réservés : le parent choisit, d'après le menu de la semaine, les jours où son enfant mange à la cantine
+CREATE TABLE IF NOT EXISTS cantine_reservations (
+  eleve_id   INTEGER NOT NULL REFERENCES eleves(id) ON DELETE CASCADE,
+  jour       DATE NOT NULL,
+  parent_id  INTEGER REFERENCES users(id) ON DELETE SET NULL,   -- parent qui a réservé
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  PRIMARY KEY (eleve_id, jour)
+);
+CREATE INDEX IF NOT EXISTS idx_cantine_reservations_jour ON cantine_reservations(jour);
 
 -- "pour" = un rôle ('admin', 'parent') ou l'id d'un utilisateur
 CREATE TABLE IF NOT EXISTS notifications (
@@ -198,7 +199,7 @@ DO $$ BEGIN
     DELETE FROM cantine_inscriptions WHERE statut = 'Refusée';
   END IF;
 END $$;
-ALTER TABLE cantine_inscriptions DROP COLUMN IF EXISTS allergenes, DROP COLUMN IF EXISTS allergies,
+ALTER TABLE IF EXISTS cantine_inscriptions DROP COLUMN IF EXISTS allergenes, DROP COLUMN IF EXISTS allergies,
   DROP COLUMN IF EXISTS non_manges, DROP COLUMN IF EXISTS remarques, DROP COLUMN IF EXISTS statut,
   DROP COLUMN IF EXISTS reponse, DROP COLUMN IF EXISTS traitee_par, DROP COLUMN IF EXISTS nb, DROP COLUMN IF EXISTS accepte_at;
 DROP TABLE IF EXISTS cantine_menus;
@@ -260,3 +261,9 @@ DO $$ BEGIN
     INSERT INTO parametres (cle, valeur) VALUES ('classes_lettres', 'true');
   END IF;
 END $$;
+-- Cantine : semaine du menu (son lundi) et jours d'ouverture ; un menu déjà envoyé vaut pour sa semaine, du lundi au vendredi
+ALTER TABLE cantine_semaines ADD COLUMN IF NOT EXISTS lundi DATE,
+  ADD COLUMN IF NOT EXISTS jours SMALLINT[] NOT NULL DEFAULT '{1,2,3,4,5}';
+UPDATE cantine_semaines SET lundi = date_trunc('week', created_at AT TIME ZONE 'Africa/Tunis')::date WHERE lundi IS NULL;
+-- Cantine : plus d'inscription « à l'année » ; le parent réserve les jours (table cantine_reservations)
+DROP TABLE IF EXISTS cantine_inscriptions;

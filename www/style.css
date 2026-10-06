@@ -1016,6 +1016,29 @@ input.montant { width: 90px; padding: 7px 8px; border: 1px solid var(--border); 
   font: inherit; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
 .onglets button.actif { background: var(--primary); border-color: var(--primary); color: var(--ivoire); box-shadow: 0 3px 0 var(--primary-dark); }
 .fiche-cantine { display: flex; flex-direction: column; gap: 4px; margin-top: 8px; }
+/* Jours de cantine choisis par le parent : une case par jour, aux couleurs de la marelle quand elle est choisie */
+.cantine-jours { display: grid; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 10px; }
+.cantine-jour {
+  display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 12px 6px; font: inherit; color: var(--text);
+  background: var(--champ); border: 2px dashed var(--border); border-radius: 16px; cursor: pointer; transition: transform 0.15s;
+}
+.cantine-jour:hover { transform: translateY(-2px); }
+.cantine-jour:disabled { cursor: not-allowed; opacity: 0.55; transform: none; }
+.cj-nom { font-family: var(--titre); font-size: 17px; font-weight: 700; line-height: 1.2; color: var(--sidebar); }
+.cj-date { font-size: 13px; color: var(--muted); }
+.cj-etat { margin-top: 4px; font-size: 12px; font-weight: 700; color: var(--muted); }
+.cantine-jour.choisi { border-style: solid; border-color: var(--case, var(--primary)); background: var(--primary-light);
+  background: color-mix(in srgb, var(--case, var(--primary)) 24%, var(--champ)); }
+.cantine-jour.choisi .cj-etat { color: var(--sidebar); }
+.cantine-jour:nth-child(6n+1) { --case: var(--case-rouge); }
+.cantine-jour:nth-child(6n+2) { --case: var(--case-jaune); }
+.cantine-jour:nth-child(6n+3) { --case: var(--case-rose); }
+.cantine-jour:nth-child(6n+4) { --case: var(--case-vert); }
+.cantine-jour:nth-child(6n+5) { --case: var(--case-cyan); }
+.cantine-jour:nth-child(6n+6) { --case: var(--case-violet); }
+.cantine-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 14px; }
+.cantine-actions > span { flex: 1; min-width: 160px; }
+.jours-ouverts .check input { accent-color: var(--primary); }
 .menu-semaine img { display: block; width: 100%; max-width: 720px; max-height: 80vh; object-fit: contain; border-radius: 10px;
   border: 1px solid var(--border); background: var(--bg); cursor: zoom-in; margin: 6px 0 8px; }
 .menu-attente { width: 140px; height: 170px; }
@@ -1026,5 +1049,7 @@ input.montant { width: 90px; padding: 7px 8px; border: 1px solid var(--border); 
 
 
 @media (max-width: 860px) {
+  .cantine-jours { grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .cantine-actions .btn-primary { flex: 1 1 100%; }
   .onglets button { flex: 1; justify-content: center; padding: 10px 8px; font-size: 14px; }
 }

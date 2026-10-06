@@ -6,7 +6,7 @@ import bcrypt from 'bcryptjs';
 import { pool, q } from './db.js';
 
 const TABLES = `push_abonnements, notifications_lues, notifications, reclamations, evenements,
-  cantine_semaines, cantine_menus, cantine_inscriptions,
+  cantine_reservations, cantine_semaines, cantine_menus, cantine_inscriptions,
   publication_fichiers, publications, absences, emplois, eleves, classes, users, fichiers,
   -- anciennes tables (WhatsApp, réunions de la direction, version école primaire)
   enseignants, wa_messages, wa_auth, reunions, cantine_repas, seances,
@@ -54,10 +54,7 @@ export async function initialiser({ reset = false } = {}) {
   await q(`INSERT INTO publications (type, classe, matiere, date, description) VALUES
     ('cours', 'Classe A', 'Langue arabe', CURRENT_DATE, 'La lettre « ب » : écriture et mots qui commencent par ب.'),
     ('travail', 'Classe A', 'Français', CURRENT_DATE + 1, 'Colorier les dessins qui commencent par le son « a ».')`);
-
-  // Cantine : Youssef et Lina inscrits (menu de la semaine : à envoyer en photo par l'administration)
-  const [pere] = await q(`SELECT id FROM users WHERE tel_cle = tel_cle('20 100 200')`);
-  await q(`INSERT INTO cantine_inscriptions (eleve_id, parent_id) SELECT id, $1 FROM eleves WHERE nom IN ('Youssef Hamdi', 'Lina Hamdi')`, [pere.id]);
+  // Cantine : les parents choisissent les jours une fois le menu de la semaine envoyé (photo, par l'administration)
   return true;
 }
 

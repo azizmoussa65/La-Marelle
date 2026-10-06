@@ -111,12 +111,15 @@ Pour l'App Store : compte Apple Developer (99 $/an) et un serveur en **HTTPS** (
 - Les parents de la classe reçoivent une notification et voient les publications classées par jour, photo en plein écran.
 
 ### Cantine scolaire
-- **Parent** (page « Cantine ») : inscrit son enfant d'un appui (« Inscrire à la cantine ») ; l'inscription est
-  **acceptée tout de suite** et l'administration reçoit une notification. Le parent peut aussi le désinscrire.
 - **Administration** (page « Cantine », 2 onglets) :
-  - *Menu de la semaine* : photo (ou PDF) du menu → envoyée tout de suite aux parents des enfants inscrits.
+  - *Menu de la semaine* : photo (ou PDF) du menu, **semaine** (son lundi) et **jours de cantine** (lundi → vendredi
+    par défaut, samedi possible) → envoyé tout de suite à tous les parents avec une notification.
     Un nouveau menu **remplace automatiquement** l'ancien.
-  - *Inscrits* : la liste des élèves inscrits (classe, parent), avec « Désinscrire ».
+  - *Réservations* : les repas réservés, **jour par jour** (enfant, classe, parent qui a choisi), filtre par classe.
+    Le tableau de bord affiche le nombre de repas du jour.
+- **Parent** (page « Cantine ») : pour chaque enfant, touche les **jours** de la semaine du menu où il mange à la
+  cantine, puis « Enregistrer » (« Tous les jours » en un appui). Un jour se change **jusqu'à la veille** ;
+  l'administration reçoit une notification avec les jours choisis.
 
 ### Autres pages
 - **Emplois du temps** : une photo (ou un PDF) par classe, prise avec le téléphone → envoyée tout de suite aux parents
@@ -156,6 +159,6 @@ Pour l'App Store : compte Apple Developer (99 $/an) et un serveur en **HTTPS** (
 | POST/PATCH/DELETE | `/api/users` (administrateurs) | administration |
 | POST | `/api/reclamations` (formulaire + pièce jointe) | parent |
 | PATCH | `/api/reclamations/:id/traiter` (réponse optionnelle) | administration |
-| POST/DELETE | `/api/cantine/inscriptions` | parent (DELETE : aussi l'administration) |
-| POST/DELETE | `/api/cantine/menus` (photo du menu, remplace l'ancien) → parents des inscrits | administration |
+| PUT | `/api/cantine/reservations` (jours de cantine d'un enfant, semaine du menu) | parent |
+| POST/DELETE | `/api/cantine/menus` (photo, semaine, jours ; remplace l'ancien) → tous les parents | administration |
 | GET | `/api/fichiers/:id` | lien non devinable (UUID) |

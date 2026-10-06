@@ -64,15 +64,17 @@ const SQL = {
                    r.piece_id::text AS "pieceId", f.type AS "pieceType", f.nom AS "pieceNom"
                  FROM reclamations r JOIN users pu ON pu.id = r.parent_id
                  LEFT JOIN eleves e ON e.id = r.eleve_id LEFT JOIN fichiers f ON f.id = r.piece_id`,
-  cantineInscriptions: `SELECT c.id::text AS id, c.eleve_id::text AS "eleveId", u.nom AS "parentNom", u.telephone AS "parentTel",
-                          ${DATE_FR('c.created_at')} AS "inscritLe", ${DATE_FR('c.updated_at')} AS date
-                        FROM cantine_inscriptions c LEFT JOIN users u ON u.id = c.parent_id`,
+  cantineReservations: `SELECT c.eleve_id::text AS "eleveId", c.jour, u.nom AS "parentNom", u.telephone AS "parentTel",
+                          ${DATE_FR('c.created_at')} AS "reserveLe"
+                        FROM cantine_reservations c LEFT JOIN users u ON u.id = c.parent_id`,
   cantineMenus: `SELECT s.photo_id::text AS "photoId", f.type AS "photoType", f.nom AS "photoNom", u.nom AS "creePar",
-                   ${DATE_FR('s.created_at')} AS "envoyeLe"
+                   ${DATE_FR('s.created_at')} AS "envoyeLe", s.lundi, s.jours
                  FROM cantine_semaines s JOIN fichiers f ON f.id = s.photo_id LEFT JOIN users u ON u.id = s.cree_par`
 };
 // Enfants du parent connecté ($1 = sa clé de téléphone)
 const MES_ENFANTS = `(tel_cle(tel_pere) = $1 OR tel_cle(tel_mere) = $1)`;
+// Date du jour en Tunisie (la base est en UTC : à 0 h 30, c'est déjà le lendemain à Tunis)
+const AUJOURDHUI = `(now() AT TIME ZONE 'Africa/Tunis')::date`;
 
 // ================= OUTILS =================
 class Erreur extends Error {
@@ -280,23 +282,23 @@ app.get('/api/data', auth, async (req, res) => {
   if (u.role === 'parent') {
     const enfants = await q(`${SQL.eleves} WHERE ${MES_ENFANTS} ORDER BY date_naissance NULLS LAST, nom`, [u.telCle]);
     const ids = enfants.map(e => Number(e.id)), cls = [...new Set(enfants.map(e => e.classe))];
-    const [emplois, absences, publications, reclamations, cantineInscriptions, cantineMenus, n, c, ev] = await Promise.all([
+    const [emplois, absences, publications, reclamations, cantineReservations, cantineMenus, n, c, ev] = await Promise.all([
       q(`${SQL.emplois} WHERE em.classe = ANY($1)`, [cls]),
       q(`${SQL.absences} WHERE a.eleve_id = ANY($1::int[]) ORDER BY a.date DESC LIMIT 500`, [ids]),
       q(`${SQL.publications} WHERE p.classe = ANY($1) ORDER BY p.date DESC, p.id DESC LIMIT 300`, [cls]),
       q(`${SQL.reclamations} WHERE r.parent_id = $1 ORDER BY r.created_at DESC`, [u.id]),
-      q(`${SQL.cantineInscriptions} WHERE c.eleve_id = ANY($1::int[])`, [ids]),
+      q(`${SQL.cantineReservations} WHERE c.eleve_id = ANY($1::int[]) AND c.jour >= ${AUJOURDHUI} - 7 ORDER BY c.jour`, [ids]),
       q(`${SQL.cantineMenus}`),
       notifications, classes, evenements
     ]);
-    return res.json({ enfants, emplois, absences, publications, reclamations, cantineInscriptions, cantineMenus,
+    return res.json({ enfants, emplois, absences, publications, reclamations, cantineReservations, cantineMenus,
       notifications: n,
       classes: c.filter(x => cls.includes(x.nom)), evenements: ev, ...constantes });
   }
 
   // Administration : toute l'école
   const [users, parents, eleves, emplois, absences, publications, reclamations,
-    cantineInscriptions, cantineMenus, n, c, ev] = await Promise.all([
+    cantineReservations, cantineMenus, n, c, ev] = await Promise.all([
     q(`${SQL.users} WHERE role <> 'parent' ORDER BY nom`),
     q(`${SQL.parents} ORDER BY u.nom`),
     q(`${SQL.eleves} ORDER BY nom`),
@@ -304,12 +306,12 @@ app.get('/api/data', auth, async (req, res) => {
     q(`${SQL.absences} WHERE a.date >= CURRENT_DATE - 120 ORDER BY a.date DESC, a.id DESC LIMIT 3000`),
     q(`${SQL.publications} ORDER BY p.date DESC, p.id DESC LIMIT 300`),
     q(`${SQL.reclamations} ORDER BY r.created_at DESC LIMIT 300`),
-    q(`${SQL.cantineInscriptions} ORDER BY c.updated_at DESC`),
+    q(`${SQL.cantineReservations} WHERE c.jour >= ${AUJOURDHUI} - 7 ORDER BY c.jour LIMIT 5000`),
     q(`${SQL.cantineMenus}`),
     notifications, classes, evenements
   ]);
   res.json({ users, parents, eleves, emplois, absences, publications, reclamations,
-    cantineInscriptions, cantineMenus, notifications: n, classes: c, evenements: ev, ...constantes });
+    cantineReservations, cantineMenus, notifications: n, classes: c, evenements: ev, ...constantes });
 });
 
 // ================= CLASSES (« Classe A »…) =================
@@ -585,43 +587,53 @@ app.get('/api/fichiers/:id', async (req, res) => {
 });
 
 // ================= CANTINE SCOLAIRE =================
-// ----- Inscription par le parent, en un appui : acceptée tout de suite -----
-app.post('/api/cantine/inscriptions', auth, seul('parent'), async (req, res) => {
+// ----- Le parent choisit les jours de cantine de son enfant, dans la semaine du menu -----
+// Un jour se change jusqu'à la veille : les jours passés et celui d'aujourd'hui restent comme ils sont
+const JOURS_COURTS = ['dim.', 'lun.', 'mar.', 'mer.', 'jeu.', 'ven.', 'sam.'];
+const jourCourt = iso => { const d = new Date(iso + 'T12:00:00Z'); return `${JOURS_COURTS[d.getUTCDay()]} ${iso.slice(8, 10)}/${iso.slice(5, 7)}`; };
+
+app.put('/api/cantine/reservations', auth, seul('parent'), async (req, res) => {
   const [enfant] = await q(`SELECT id, nom, classe FROM eleves WHERE id = $2 AND ${MES_ENFANTS}`, [req.user.telCle, entier(req.body.eleveId)]);
   exiger(enfant, 'Enfant introuvable', 404);
-  const [r] = await q(`INSERT INTO cantine_inscriptions (eleve_id, parent_id) VALUES ($1,$2) ON CONFLICT (eleve_id) DO NOTHING RETURNING id`,
-    [enfant.id, req.user.id]);
-  if (r) await notifier('admin', 'cantine', `🍽️ ${enfant.nom} (${enfant.classe}) est inscrit(e) à la cantine par ${req.user.nom}.`);
-  res.status(201).json({ ok: true });
-});
-
-// Désinscription : par le parent (son enfant) ou par l'administration
-app.delete('/api/cantine/inscriptions/:id', auth, async (req, res) => {
-  const id = entier(req.params.id);
-  const parent = req.user.role === 'parent';
-  const [e] = await q(`DELETE FROM cantine_inscriptions c USING eleves e WHERE c.id = $1 AND e.id = c.eleve_id
-    ${parent ? 'AND (tel_cle(e.tel_pere) = $2 OR tel_cle(e.tel_mere) = $2)' : ''} RETURNING e.id, e.nom, e.classe`,
-    parent ? [id, req.user.telCle] : [id]);
-  exiger(e, 'Inscription introuvable', 404);
-  if (parent) await notifier('admin', 'cantine', `🍽️ ${req.user.nom} a désinscrit ${e.nom} (${e.classe}) de la cantine.`);
-  else await notifier(await parentsDesEleves([e.id]), 'cantine', `🍽️ ${e.nom} n'est plus inscrit(e) à la cantine.`);
-  res.json({ ok: true });
+  const [menu] = await q('SELECT lundi FROM cantine_semaines LIMIT 1');
+  exiger(menu && menu.lundi, "Le menu de la semaine n'a pas encore été envoyé");
+  // Jours qu'on peut encore changer : jours d'ouverture de la semaine du menu, après aujourd'hui
+  const modifiables = (await q(`SELECT (s.lundi + j - 1)::text AS jour FROM cantine_semaines s, unnest(s.jours) j
+    WHERE s.lundi + j - 1 > ${AUJOURDHUI}`)).map(r => r.jour);
+  const demandes = [...new Set([].concat(req.body.jours || []).map(String))];
+  exiger(demandes.every(j => modifiables.includes(j)), 'Ce jour ne peut plus être changé (au plus tard la veille)');
+  const semaine = `SELECT jour::text FROM cantine_reservations WHERE eleve_id = $1 AND jour BETWEEN $2::date AND $2::date + 6 ORDER BY jour`;
+  const avant = (await q(semaine, [enfant.id, menu.lundi])).map(r => r.jour);
+  await q('DELETE FROM cantine_reservations WHERE eleve_id = $1 AND jour = ANY($2::date[]) AND NOT (jour = ANY($3::date[]))',
+    [enfant.id, modifiables, demandes]);
+  await q('INSERT INTO cantine_reservations (eleve_id, jour, parent_id) SELECT $1, unnest($2::date[]), $3 ON CONFLICT DO NOTHING',
+    [enfant.id, demandes, req.user.id]);
+  const apres = (await q(semaine, [enfant.id, menu.lundi])).map(r => r.jour);
+  if (apres.join() !== avant.join()) {
+    await notifier('admin', 'cantine', apres.length
+      ? `🍽️ ${enfant.nom} (${enfant.classe}) mange à la cantine : ${apres.map(jourCourt).join(', ')} (choix de ${req.user.nom}).`
+      : `🍽️ ${enfant.nom} (${enfant.classe}) ne mange pas à la cantine cette semaine (choix de ${req.user.nom}).`);
+  }
+  res.json({ ok: true, jours: apres });
 });
 
 // ----- Menu de la semaine : une seule photo (ou un PDF) ; la nouvelle remplace l'ancienne -----
-const parentsCantine = async () => (await q(`SELECT DISTINCT u.id FROM users u JOIN eleves e
-  ON u.tel_cle IN (tel_cle(e.tel_pere), tel_cle(e.tel_mere)) JOIN cantine_inscriptions c ON c.eleve_id = e.id
-  WHERE u.role = 'parent'`)).map(r => r.id);
-
+// Avec la semaine (n'importe quel jour → son lundi) et les jours d'ouverture (1 = lundi … 6 = samedi)
 app.post('/api/cantine/menus', auth, equipe, televerser, async (req, res) => {
   exiger(req.file, 'Prenez ou choisissez la photo du menu');
+  const semaine = String(req.body.lundi || '');
+  exiger(/^\d{4}-\d{2}-\d{2}$/.test(semaine) && !isNaN(new Date(semaine)), 'Choisissez la semaine du menu');
+  const jours = [...new Set(String(req.body.jours || '').split(',').map(Number))].filter(n => n >= 1 && n <= 6).sort();
+  exiger(jours.length, 'Choisissez au moins un jour de cantine');
   const photoId = await enregistrerFichier(req.file);
   await q('DELETE FROM cantine_semaines');   // l'ancien menu est supprimé automatiquement
-  await q('INSERT INTO cantine_semaines (photo_id, cree_par) VALUES ($1,$2)', [photoId, req.user.id]);
+  const [m] = await q(`INSERT INTO cantine_semaines (photo_id, cree_par, lundi, jours)
+    VALUES ($1, $2, date_trunc('week', $3::date)::date, $4::smallint[]) RETURNING lundi::text`, [photoId, req.user.id, semaine, jours]);
   await nettoyerFichiers();
-  const parents = await parentsCantine();
-  await notifier(parents, 'cantine', '🍽️ Le nouveau menu de la cantine est disponible : touchez pour le voir.');
-  res.status(201).json({ ok: true, parents: parents.length });
+  const [{ n }] = await q("SELECT count(*)::int AS n FROM users WHERE role = 'parent'");
+  await notifier('parent', 'cantine',
+    `🍽️ Le menu de la semaine du ${m.lundi.slice(8, 10)}/${m.lundi.slice(5, 7)} est disponible : choisissez les jours de cantine de votre enfant.`);
+  res.status(201).json({ ok: true, parents: n });
 });
 
 app.delete('/api/cantine/menus', auth, equipe, async (req, res) => {
