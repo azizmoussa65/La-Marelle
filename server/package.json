@@ -1,5 +1,5 @@
 {
-  "name": "lamarellekids-server",
+  "name": "lamarelle-server",
   "version": "1.0.0",
   "private": true,
   "description": "API La Marelle (Express + PostgreSQL)",

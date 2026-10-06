@@ -136,7 +136,7 @@ Pour l'App Store : compte Apple Developer (99 $/an) et un serveur en **HTTPS** (
 - **Android / ordinateur** : Chrome, Edge… (site, ou application installée depuis le navigateur).
 - **APK Android** : Firebase Cloud Messaging, préparé mais inactif tant que Firebase n'est pas configuré :
   1. [console.firebase.google.com](https://console.firebase.google.com) → nouveau projet → ajouter une app Android
-     `tn.ecole.lamarellekids` → télécharger `google-services.json` dans `android/app/`.
+     `tn.ecole.lamarelle` → télécharger `google-services.json` dans `android/app/`.
   2. Paramètres du projet → Comptes de service → « Générer une nouvelle clé privée » → copier tout le JSON
      dans la variable `FIREBASE_SERVICE_ACCOUNT` sur Render.
   3. `window.PUSH_NATIF = true` dans `www/config.js`, puis `npm run apk`.

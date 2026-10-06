@@ -14,7 +14,7 @@ let fcm = null;   // firebase-admin messaging, ou null si Firebase n'est pas con
 export async function initialiserPush() {
   let cles = await parametre('vapid', null);
   if (!cles) { cles = webpush.generateVAPIDKeys(); await definirParametre('vapid', cles); }
-  webpush.setVapidDetails(process.env.PUSH_CONTACT || 'mailto:contact@lamarellekids.tn', cles.publicKey, cles.privateKey);
+  webpush.setVapidDetails(process.env.PUSH_CONTACT || 'mailto:contact@lamarelle.tn', cles.publicKey, cles.privateKey);
   clePublique = cles.publicKey;
   if (process.env.FIREBASE_SERVICE_ACCOUNT) {
     try {
@@ -65,7 +65,7 @@ export async function pousser(pour, type, texte) {
         tokens: lot.map(a => a.cle),
         notification: { title: titre, body: texte },
         data: { type },
-        android: { priority: 'high', notification: { icon: 'ic_stat_notif', color: '#1b2f8f', channelId: 'lamarellekids' } }
+        android: { priority: 'high', notification: { icon: 'ic_stat_notif', color: '#1b2f8f', channelId: 'lamarelle' } }
       }).catch(() => null);
       r?.responses.forEach((x, j) => {
         const code = x.error?.code || '';

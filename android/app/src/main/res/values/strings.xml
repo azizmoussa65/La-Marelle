@@ -2,6 +2,6 @@
 <resources>
     <string name="app_name">La Marelle</string>
     <string name="title_activity_main">La Marelle</string>
-    <string name="package_name">tn.ecole.lamarellekids</string>
-    <string name="custom_url_scheme">tn.ecole.lamarellekids</string>
+    <string name="package_name">tn.ecole.lamarelle</string>
+    <string name="custom_url_scheme">tn.ecole.lamarelle</string>
 </resources>

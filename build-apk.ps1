@@ -1,9 +1,9 @@
 # Construit l'APK Android de La Marelle -> LaMarelle.apk
 # Le chemin du dossier contient des accents (é, è) que les outils Android refusent :
-# on passe donc par une jonction C:\lamarellekids qui pointe vers ce dossier.
+# on passe donc par une jonction C:\lamarelle qui pointe vers ce dossier.
 $ErrorActionPreference = 'Stop'
 $projet = $PSScriptRoot
-$lien = 'C:\lamarellekids'
+$lien = 'C:\lamarelle'
 if (-not (Test-Path $lien)) { New-Item -ItemType Junction -Path $lien -Target $projet | Out-Null }
 
 $env:JAVA_HOME = 'C:\Program Files\Java\jdk-21'

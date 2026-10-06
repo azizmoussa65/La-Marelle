@@ -1,5 +1,5 @@
 /* Service worker : l'application fonctionne hors-ligne une fois ouverte une première fois */
-const CACHE = 'lamarellekids-v2';
+const CACHE = 'lamarelle-v2';
 const FICHIERS = [
   './', './index.html', './style.css', './config.js', './app.js', './manifest.webmanifest', './img/logo.png',
   './icons/icon-192.png', './icons/icon-512.png', './icons/icon-maskable-512.png'
@@ -35,7 +35,7 @@ self.addEventListener('push', e => {
     body: d.texte || 'Nouvelle notification',
     icon: 'icons/icon-192.png',
     badge: 'icons/badge-96.png',
-    tag: 'lamarellekids-' + Date.now(),
+    tag: 'lamarelle-' + Date.now(),
     data: { type: d.type || '', texte: d.texte || '' }
   }));
 });

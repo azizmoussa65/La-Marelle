@@ -268,7 +268,7 @@ async function login(e) {
   try {
     const r = await api('/login', { method: 'POST', body: { identifiant: val('login-id'), password: $('login-password').value } });
     token = r.token;
-    stocker('lamarellekids-token', token);
+    stocker('lamarelle-token', token);
     await ouvrirSession(r.user);
   } catch (err) {
     $('login-error').textContent = err.message;
@@ -293,7 +293,7 @@ async function ouvrirSession(u) {
 // Pas d'internet ou serveur en train de se réveiller → nouvel essai, sans déconnecter
 // (seul un jeton refusé par le serveur, erreur 401, déconnecte : voir api()).
 async function reprendreSession() {
-  token = lireStockage('lamarellekids-token');
+  token = lireStockage('lamarelle-token');
   if (!token) return;
   const session = sessionNo;
   for (let essai = 1; ; essai++) {
@@ -322,7 +322,7 @@ function deconnecter() {
   photosPub = [];
   photoMenu = null;
   photoEmploi = null;
-  stocker('lamarellekids-token', null);
+  stocker('lamarelle-token', null);
   document.removeEventListener('click', premiereTouche, true);
   toggleSidebar(false);
   $('app').classList.add('hidden');
@@ -673,7 +673,7 @@ function testerPush() { action(api('/push/test', { method: 'POST' }), 'Notificat
 document.addEventListener('DOMContentLoaded', () => {
   const P = pluginPush();
   if (estNatif && window.PUSH_NATIF && P) {
-    P.createChannel({ id: 'lamarellekids', name: 'La Marelle', importance: 5, visibility: 1 }).catch(() => {});
+    P.createChannel({ id: 'lamarelle', name: 'La Marelle', importance: 5, visibility: 1 }).catch(() => {});
     P.addListener('registration', ({ value }) => {
       pushCle = value;
       if (token) api('/push/abonnement', { method: 'POST', body: { type: 'fcm', jeton: value } })

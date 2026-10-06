@@ -1,4 +1,4 @@
-package tn.ecole.lamarellekids;
+package tn.ecole.lamarelle;
 
 import com.getcapacitor.BridgeActivity;
 
