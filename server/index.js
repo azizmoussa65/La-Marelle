@@ -3,7 +3,7 @@
    Espaces : Administration, Parents.
    Sert aussi l'application web (dossier ../www)
    ========================================================= */
-import 'dotenv/config';
+import './env.js';
 import express from 'express';
 import cors from 'cors';
 import bcrypt from 'bcryptjs';

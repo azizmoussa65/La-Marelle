@@ -2,21 +2,21 @@
 #   Mot de passe : fichier .env à la racine (POSTGRES_PASSWORD=..., non versionné)
 #   Démarrer : docker compose up -d
 #   Arrêter  : docker compose down        (les données sont conservées dans le volume)
-# Port 5434 sur le PC (5432 et 5433 sont déjà utilisés par d'autres projets)
-name: lamarellekids
+# Port 5435 sur le PC (5432, 5433 et 5434 sont déjà utilisés par d'autres projets)
+name: lamarelle
 services:
   db:
     image: postgres:16-alpine
-    container_name: lamarellekids-db
+    container_name: lamarelle-db
     restart: unless-stopped
     environment:
-      POSTGRES_DB: lamarellekids
-      POSTGRES_USER: lamarellekids
+      POSTGRES_DB: lamarelle
+      POSTGRES_USER: lamarelle
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Definir POSTGRES_PASSWORD dans le fichier .env}
     ports:
-      - "5434:5432"
+      - "5435:5432"
     volumes:
-      - lamarellekids-data:/var/lib/postgresql/data
+      - lamarelle-data:/var/lib/postgresql/data
 
 volumes:
-  lamarellekids-data:
+  lamarelle-data:

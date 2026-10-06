@@ -1,5 +1,5 @@
 // Connexion PostgreSQL partagée
-import 'dotenv/config';
+import './env.js';
 import pg from 'pg';
 
 // Les colonnes DATE sont renvoyées telles quelles ("2026-09-28") au lieu d'objets Date

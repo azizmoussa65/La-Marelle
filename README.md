@@ -12,7 +12,7 @@ les parents le reçoivent tout de suite, avec une notification sur leur téléph
 ```
 www/              ← l'application (HTML / CSS / JS) — config.js = adresse du serveur
 server/           ← API Express + PostgreSQL (index.js, schema.sql, seed.js, .env)
-docker-compose.yml← base PostgreSQL (port 5434)
+docker-compose.yml← base PostgreSQL (port 5435)
 android/  ios/    ← projets natifs (Capacitor 7)
 build-apk.ps1     ← construit LaMarelle.apk
 ```
@@ -28,10 +28,10 @@ Prérequis : Docker Desktop lancé, Node.js 20+.
 
 ```powershell
 npm install        # la première fois
-npm run dev        # lance PostgreSQL (Docker) puis l'API sur http://localhost:3001
+npm run dev        # lance PostgreSQL (Docker) puis l'API sur http://localhost:3002
 ```
 
-- Ouvrir **http://localhost:3001** dans le navigateur : l'application complète.
+- Ouvrir **http://localhost:3002** dans le navigateur : l'application complète.
 - Au premier démarrage, les tables sont créées et les comptes de démo ajoutés.
 - Remettre la base à zéro : `cd server; node seed.js --reset`
 - Une base de l'ancienne version (école primaire) n'est jamais modifiée automatiquement : le serveur s'arrête
@@ -40,20 +40,20 @@ npm run dev        # lance PostgreSQL (Docker) puis l'API sur http://localhost:3
 ### Autoriser les téléphones à se connecter (une seule fois)
 Dans **PowerShell en administrateur** :
 ```powershell
-New-NetFirewallRule -DisplayName "La Marelle API (port 3001)" -Direction Inbound -Protocol TCP -LocalPort 3001 -Action Allow
+New-NetFirewallRule -DisplayName "La Marelle API (port 3002)" -Direction Inbound -Protocol TCP -LocalPort 3002 -Action Allow
 ```
 
 ---
 
 ## 2. Tester sur les téléphones (même Wi-Fi que le PC)
 
-L'adresse IP du PC est dans [www/config.js](www/config.js) (`API_MOBILE`, actuellement `http://172.20.10.2:3001`).
+L'adresse IP du PC est dans [www/config.js](www/config.js) (`API_MOBILE`, actuellement `http://172.20.10.2:3002`).
 Si le PC change de réseau Wi-Fi, trouver la nouvelle IP avec `ipconfig`, la mettre dans `config.js`,
 puis reconstruire l'APK.
 
 - **Android** : installer `LaMarelle.apk` (le copier sur le téléphone et l'ouvrir).
   Reconstruire après une modification : `npm run apk`
-- **iPhone** : ouvrir **Safari** → `http://<IP du PC>:3001` → Partager → « Sur l'écran d'accueil ».
+- **iPhone** : ouvrir **Safari** → `http://<IP du PC>:3002` → Partager → « Sur l'écran d'accueil ».
 
 ---
 
