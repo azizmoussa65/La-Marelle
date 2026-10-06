@@ -154,6 +154,19 @@ code { background: #f1f5f9; padding: 2px 6px; border-radius: 5px; font-size: 13p
   border: 1.5px dashed var(--primary); background: var(--primary-light); color: var(--primary);
   font: inherit; font-weight: 700; font-size: 14px;
 }
+/* Contact : logos Instagram et Facebook */
+.contact { margin-top: 20px; padding-top: 16px; border-top: 1px dashed var(--border); }
+.contact p { font-size: 13px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
+.contact-liens { display: flex; justify-content: center; gap: 14px; margin-top: 10px; }
+.reseau {
+  width: 46px; height: 46px; border-radius: 50%; display: grid; place-items: center; color: #fff;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+/* :focus-visible à part : un ancien Safari (iOS < 15.4) ignorerait toute la règle */
+.reseau:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2); }
+.reseau:focus-visible { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2); }
+.reseau.instagram { background: radial-gradient(circle at 30% 107%, #fdf497 0%, #fd5949 45%, #d6249f 60%, #285aeb 90%); }
+.reseau.facebook { background: #1877f2; }
 .btn-installer:hover { background: var(--primary); color: #fff; border-style: solid; }
 .guide-install {
   position: fixed; top: 0; right: 0; bottom: 0; left: 0; z-index: 1000; display: flex; align-items: flex-end; justify-content: center;
