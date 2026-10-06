@@ -5,30 +5,41 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 
 const SOURCE = 'assets/logo-source.jpg';
 const BLANC = { r: 255, g: 255, b: 255, alpha: 1 };
+const CREME = { r: 255, g: 247, b: 232, alpha: 1 };   // fond de l'application (#fff7e8) : plus de blanc
+const VIDE = { r: 0, g: 0, b: 0, alpha: 0 };
 mkdirSync('www/icons', { recursive: true });
 mkdirSync('www/img', { recursive: true });
 
-// Logo sans les grandes marges blanches de l'image d'origine
-const LOGO = await sharp(SOURCE).trim({ background: '#ffffff', threshold: 30 }).png().toBuffer();
-const logo = size => sharp(LOGO).resize(size, size, { fit: 'contain', background: BLANC });
-// Logo centré sur un carré blanc, avec une marge (icônes « maskable » et Android : rien n'est coupé)
-const avecMarge = async (taille, logoTaille, fond = BLANC) => sharp({ create: { width: taille, height: taille, channels: 4, background: fond } })
-  .composite([{ input: await logo(logoTaille).png().toBuffer(), gravity: 'center' }]);
+// Logo sans les grandes marges blanches de l'image d'origine, et sans son fond blanc
+// (« couleur vers alpha » : le blanc devient transparent, les bords restent doux)
+const decoupe = await sharp(SOURCE).trim({ background: '#ffffff', threshold: 30 }).removeAlpha().raw().toBuffer({ resolveWithObject: true });
+const sansFond = Buffer.alloc(decoupe.info.width * decoupe.info.height * 4);
+for (let k = 0; k < decoupe.info.width * decoupe.info.height; k++) {
+  const c = [decoupe.data[k * 3], decoupe.data[k * 3 + 1], decoupe.data[k * 3 + 2]];
+  const a = (255 - Math.min(...c)) / 255;
+  for (let j = 0; j < 3; j++) sansFond[k * 4 + j] = a ? Math.round((c[j] - (1 - a) * 255) / a) : 0;
+  sansFond[k * 4 + 3] = Math.round(a * 255);
+}
+const LOGO = await sharp(sansFond, { raw: { width: decoupe.info.width, height: decoupe.info.height, channels: 4 } }).png().toBuffer();
+const logo = (size, fond = CREME) => sharp(LOGO).resize(size, size, { fit: 'contain', background: VIDE }).flatten({ background: fond });
+// Logo centré sur un carré (crème par défaut), avec une marge (icônes « maskable » et Android : rien n'est coupé)
+const avecMarge = async (taille, logoTaille, fond = CREME) => sharp({ create: { width: taille, height: taille, channels: 4, background: fond } })
+  .composite([{ input: await sharp(LOGO).resize(logoTaille, logoTaille, { fit: 'contain', background: VIDE }).png().toBuffer(), gravity: 'center' }]);
 
 // Navigateur / PWA
 await logo(192).png().toFile('www/icons/icon-192.png');
 await logo(512).png().toFile('www/icons/icon-512.png');
 await (await avecMarge(512, 400)).png().toFile('www/icons/icon-maskable-512.png');
-// Interface (écran de connexion, menu) et PDF
+// Interface (menu) sur fond crème ; PDF (imprimé) sur fond blanc
 await logo(320).png({ compressionLevel: 9 }).toFile('www/img/logo.png');
-await logo(300).png({ compressionLevel: 9 }).toFile('server/logo.png');
+await logo(300, BLANC).png({ compressionLevel: 9 }).toFile('server/logo.png');
 
-// Sources Capacitor : icône adaptative Android = premier plan (logo) + arrière-plan (blanc)
+// Sources Capacitor : icône adaptative Android = premier plan (logo transparent) + arrière-plan (crème)
 await (await avecMarge(1024, 900)).png().toFile('assets/icon-only.png');
-await sharp({ create: { width: 1024, height: 1024, channels: 4, background: BLANC } }).png().toFile('assets/icon-background.png');
-await (await avecMarge(1024, 620, { r: 0, g: 0, b: 0, alpha: 0 })).png().toFile('assets/icon-foreground.png');
+await sharp({ create: { width: 1024, height: 1024, channels: 4, background: CREME } }).png().toFile('assets/icon-background.png');
+await (await avecMarge(1024, 620, VIDE)).png().toFile('assets/icon-foreground.png');
 
-// Écran de démarrage : fond blanc + logo au centre
+// Écran de démarrage : fond crème + logo au centre
 for (const nom of ['splash.png', 'splash-dark.png']) await (await avecMarge(2732, 1000)).png().toFile('assets/' + nom);
 console.log('Images générées à partir du logo ✔');
 
