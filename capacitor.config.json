@@ -3,7 +3,7 @@
   "appName": "La Marelle",
   "webDir": "www",
   "android": {
-    "backgroundColor": "#0b1a45",
+    "backgroundColor": "#2a1659",
     "allowMixedContent": true,
     "adjustMarginsForEdgeToEdge": "auto"
   },
@@ -15,7 +15,7 @@
     },
     "StatusBar": {
       "style": "DARK",
-      "backgroundColor": "#0b1a45",
+      "backgroundColor": "#2a1659",
       "overlaysWebView": false
     },
     "PushNotifications": {

@@ -1,14 +1,16 @@
-// Génère toutes les images de l'application à partir du logo de l'école (assets/logo.svg) :
+// Génère toutes les images de l'application à partir du logo de l'école (assets/logo-source.jpg) :
 // icônes PWA (www/icons), logo de l'interface (www/img), logo des PDF (server), sources Capacitor (assets/)
 import sharp from 'sharp';
 import { mkdirSync } from 'node:fs';
 
-const SOURCE = 'assets/logo.svg';
+const SOURCE = 'assets/logo-source.jpg';
 const BLANC = { r: 255, g: 255, b: 255, alpha: 1 };
 mkdirSync('www/icons', { recursive: true });
 mkdirSync('www/img', { recursive: true });
 
-const logo = size => sharp(SOURCE, { density: 300 }).resize(size, size, { fit: 'contain', background: BLANC });
+// Logo sans les grandes marges blanches de l'image d'origine
+const LOGO = await sharp(SOURCE).trim({ background: '#ffffff', threshold: 30 }).png().toBuffer();
+const logo = size => sharp(LOGO).resize(size, size, { fit: 'contain', background: BLANC });
 // Logo centré sur un carré blanc, avec une marge (icônes « maskable » et Android : rien n'est coupé)
 const avecMarge = async (taille, logoTaille, fond = BLANC) => sharp({ create: { width: taille, height: taille, channels: 4, background: fond } })
   .composite([{ input: await logo(logoTaille).png().toBuffer(), gravity: 'center' }]);
@@ -30,15 +32,17 @@ await (await avecMarge(1024, 620, { r: 0, g: 0, b: 0, alpha: 0 })).png().toFile(
 for (const nom of ['splash.png', 'splash-dark.png']) await (await avecMarge(2732, 1000)).png().toFile('assets/' + nom);
 console.log('Images générées à partir du logo ✔');
 
-// Petite icône des notifications (barre d'état) : silhouette de la marelle du logo, blanc sur fond transparent
-// (Android n'affiche que la silhouette de cette icône)
-const marelle = Buffer.from(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="387 50 250 645" width="250" height="645" fill="#fff">
-  <path d="M387 175 A125 125 0 0 1 637 175 Z"/>
-  <rect x="387" y="185" width="120" height="120" rx="18"/><rect x="517" y="185" width="120" height="120" rx="18"/>
-  <rect x="452" y="315" width="120" height="120" rx="18"/>
-  <rect x="387" y="445" width="120" height="120" rx="18"/><rect x="517" y="445" width="120" height="120" rx="18"/>
-  <rect x="452" y="575" width="120" height="120" rx="18"/></svg>`);
-const badge = (taille, marge) => sharp(marelle, { density: 300 })
+// Petite icône des notifications (barre d'état) : les cases colorées de la marelle (et « KIDS »),
+// en blanc sur fond transparent (Android n'affiche que la silhouette de cette icône)
+const { data, info } = await sharp(SOURCE).removeAlpha().raw().toBuffer({ resolveWithObject: true });
+const pixels = Buffer.alloc(info.width * info.height * 4, 255);
+for (let k = 0; k < info.width * info.height; k++) {
+  const [r, g, b] = [data[k * 3], data[k * 3 + 1], data[k * 3 + 2]];
+  const couleur = Math.max(r, g, b) - Math.min(r, g, b);   // le texte noir et le fond blanc ne sont pas colorés
+  pixels[k * 4 + 3] = couleur > 80 ? 255 : couleur > 50 ? (couleur - 50) * 8 : 0;
+}
+const marelle = await sharp(pixels, { raw: { width: info.width, height: info.height, channels: 4 } }).trim().png().toBuffer();
+const badge = (taille, marge) => sharp(marelle)
   .resize(taille - 2 * marge, taille - 2 * marge, { fit: 'contain', background: { r: 0, g: 0, b: 0, alpha: 0 } })
   .extend({ top: marge, bottom: marge, left: marge, right: marge, background: { r: 0, g: 0, b: 0, alpha: 0 } }).png();
 await badge(96, 8).toFile('www/icons/badge-96.png');

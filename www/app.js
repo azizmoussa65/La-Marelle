@@ -225,7 +225,7 @@ document.addEventListener('gesturechange', e => e.preventDefault());
 document.addEventListener('touchmove', e => { if (e.touches.length > 1) e.preventDefault(); }, { passive: false });
 
 // ================= ÉCRAN DE CONNEXION ANIMÉ =================
-// Fournitures scolaires, étoiles et bulles bleu marine / rouges qui montent doucement derrière la carte
+// Fournitures scolaires, étoiles et bulles aux couleurs de la marelle qui montent doucement derrière la carte
 (function animerConnexion() {
   const fond = $('fond-anime');
   if (!fond || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
@@ -238,7 +238,7 @@ document.addEventListener('touchmove', e => { if (e.touches.length > 1) e.preven
   });
   for (let i = 0; i < 10; i++) {
     const t = hasard(18, 70).toFixed(0);
-    html += `<span class="bulle ${i % 3 === 0 ? 'rouge' : ''}" style="left:${hasard(0, 95).toFixed(1)}%;width:${t}px;height:${t}px;`
+    html += `<span class="bulle ${i % 2 === 0 ? 'c' + (i / 2 % 6) : ''}" style="left:${hasard(0, 95).toFixed(1)}%;width:${t}px;height:${t}px;`
       + `--duree:${hasard(14, 26).toFixed(1)}s;--delai:-${hasard(0, 24).toFixed(1)}s;--derive:${hasard(-40, 40).toFixed(0)}px"></span>`;
   }
   fond.innerHTML = html;

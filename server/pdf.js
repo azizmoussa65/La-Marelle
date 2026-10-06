@@ -7,8 +7,9 @@ import PDFDocument from 'pdfkit';
 import { fileURLToPath } from 'node:url';
 import { existsSync } from 'node:fs';
 
-// Couleurs de La Marelle : bleu marine + rouge du logo
-const BLEU = '#1b2f8f', NUIT = '#0b1a45', ROUGE_LOGO = '#d7141a', GRIS = '#5b6478', TRAIT = '#dde3ee', FOND = '#f3f5fa';
+// Couleurs de La Marelle : violet + les cases colorées de la marelle du logo
+const BLEU = '#7c3aed', NUIT = '#2a1659', GRIS = '#5f5873', TRAIT = '#e7e0f3', FOND = '#f8f5fd';
+const CASES = ['#e0362c', '#ffd23f', '#d93ccf', '#6fd13a', '#7fe0f0', '#9b4cf0'];
 const LOGO = fileURLToPath(new URL('./logo.png', import.meta.url));
 const MARGE = 40;
 const ARABE = fileURLToPath(new URL('./polices/Amiri-Regular.ttf', import.meta.url));
@@ -40,17 +41,18 @@ function nouveauDocument(res, nomFichier, titre, layout = 'portrait') {
 function entete(doc, titre, sousTitre) {
   const l = doc.page.width;
   doc.rect(0, 0, l, 70).fill(NUIT);
-  doc.rect(0, 70, l, 4).fill(ROUGE_LOGO);
-  // Logo de l'école dans un rond blanc
+  // Bande des 6 cases de la marelle sous l'en-tête
+  CASES.forEach((c, i) => doc.rect(i * l / CASES.length, 70, l / CASES.length + 1, 4).fill(c));
+  // Logo de l'école dans un carré blanc arrondi
   let x = MARGE;
   if (existsSync(LOGO)) {
-    doc.circle(MARGE + 26, 35, 27).fill('#ffffff');
-    doc.image(LOGO, MARGE + 7, 16, { fit: [38, 38], align: 'center', valign: 'center' });
+    doc.roundedRect(MARGE - 1, 8, 54, 54, 8).fill('#ffffff');
+    doc.image(LOGO, MARGE + 1, 10, { fit: [50, 50], align: 'center', valign: 'center' });
     x = MARGE + 64;
   }
   doc.fillColor('#ffffff').font('Helvetica-Bold').fontSize(18).text('La ', x, 18, { continued: true })
-    .fillColor('#ff8a8d').text('Marelle');
-  doc.font('Helvetica').fontSize(9).fillColor('#cbd5e1').text('La Marelle · École préparatoire', x, 42);
+    .fillColor('#ffd23f').text('Marelle');
+  doc.font('Helvetica').fontSize(9).fillColor('#d9cff0').text('La Marelle · École préparatoire', x, 42);
   doc.fontSize(9).text(`Édité le ${aujourdhui()}`, MARGE, 42, { width: l - 2 * MARGE, align: 'right' });
   police(doc.fillColor(NUIT), titre, true).fontSize(16).text(titre, MARGE, 90, { wordSpacing: espaceMots(titre) });
   if (sousTitre) doc.font('Helvetica').fontSize(10).fillColor(GRIS).text(sousTitre, MARGE, doc.y + 2);

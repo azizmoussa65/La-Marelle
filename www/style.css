@@ -1,26 +1,31 @@
 /* ================= VARIABLES ================= */
-/* Couleurs de La Marelle : bleu marine + rouge.
-   Contrastes vérifiés : texte blanc sur bleu marine et sur rouge, bleu et rouge sur fond blanc ≥ 4,5:1. */
+/* Couleurs de La Marelle (logo « La Marelle Kids ») : violet + magenta, et les cases colorées de la marelle.
+   Contrastes vérifiés : texte blanc sur violet et sur magenta, violet et magenta sur le fond ≥ 4,5:1. */
 :root {
-  --primary: #1b2f8f;        /* bleu marine du logo */
-  --primary-dark: #13216b;
-  --primary-light: #e8ecfa;
-  --accent: #d7141a;         /* rouge du logo */
-  --accent-dark: #ad0f14;
-  --accent-light: #fdeaea;
+  --primary: #7c3aed;        /* violet du logo */
+  --primary-dark: #5b21b6;
+  --primary-light: #f1eafe;
+  --accent: #b5179e;         /* magenta du logo */
+  --accent-dark: #8f117c;
+  --accent-light: #fbe7f7;
   --success: #15803d;
   --success-light: #dcfce7;
   --danger: #c81e1e;
   --danger-light: #fee2e2;
   --warning: #b45309;
   --warning-light: #fef3c7;
-  --bg: #f3f5fa;
+  --bg: #f8f5fd;
   --card: #ffffff;
-  --text: #14203d;
-  --muted: #5b6478;
-  --border: #dde3ee;
-  --sidebar: #0b1a45;        /* bleu marine foncé */
-  --sidebar-hover: #16296a;
+  --text: #1f1633;
+  --muted: #5f5873;
+  --border: #e7e0f3;
+  --sidebar: #2a1659;        /* violet foncé */
+  --sidebar-hover: #3b2178;
+  /* Cases de la marelle du logo */
+  --case-rouge: #e0362c; --case-jaune: #ffd23f; --case-rose: #d93ccf;
+  --case-vert: #6fd13a; --case-cyan: #7fe0f0; --case-violet: #9b4cf0; --orange-kids: #f0955a;
+  --marelle: linear-gradient(90deg, var(--case-rouge) 0 16.6%, var(--case-jaune) 0 33.3%, var(--case-rose) 0 50%,
+    var(--case-vert) 0 66.6%, var(--case-cyan) 0 83.3%, var(--case-violet) 0);
   --radius: 12px;
   --shadow: 0 2px 10px rgba(15, 23, 42, 0.06);
 }
@@ -74,9 +79,10 @@ code { background: #f1f5f9; padding: 2px 6px; border-radius: 5px; font-size: 13p
   padding: 16px;
   position: relative;
   overflow: hidden;
-  background: radial-gradient(circle at 15% 20%, rgba(215, 20, 26, 0.35), transparent 40%),
-              radial-gradient(circle at 85% 85%, rgba(215, 20, 26, 0.25), transparent 45%),
-              linear-gradient(150deg, #0b1a45 0%, #1b2f8f 55%, #0b1a45 100%);
+  background: radial-gradient(circle at 15% 20%, rgba(217, 60, 207, 0.35), transparent 40%),
+              radial-gradient(circle at 85% 85%, rgba(255, 210, 63, 0.22), transparent 45%),
+              radial-gradient(circle at 80% 10%, rgba(127, 224, 240, 0.18), transparent 35%),
+              linear-gradient(150deg, #2a1659 0%, #7c3aed 55%, #2a1659 100%);
 }
 .login-card {
   background: var(--card);
@@ -86,13 +92,16 @@ code { background: #f1f5f9; padding: 2px 6px; border-radius: 5px; font-size: 13p
   border-radius: 20px;
   box-shadow: 0 24px 60px rgba(0, 0, 0, 0.35);
   text-align: center;
-  border-top: 6px solid var(--accent);
   position: relative;
+  overflow: hidden;
   z-index: 1;
   animation: carte-entree 0.7s cubic-bezier(.2, .9, .3, 1.2) both;
 }
-.logo-img { width: 130px; height: 130px; object-fit: contain; animation: logo-pop 0.8s 0.2s cubic-bezier(.2, .9, .3, 1.4) both, logo-flotte 4s 1s ease-in-out infinite; }
-.login-card h1 { font-size: 28px; margin: 4px 0 2px; color: var(--primary); letter-spacing: 0.5px; }
+/* Bande des 6 cases de la marelle en haut de la carte */
+.login-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 7px; background: var(--marelle); }
+.logo-img { width: 200px; height: 170px; margin: -4px 0 4px; object-fit: contain; animation: logo-pop 0.8s 0.2s cubic-bezier(.2, .9, .3, 1.4) both, logo-flotte 4s 1s ease-in-out infinite; }
+/* Le nom est déjà dans le logo : titre gardé pour les lecteurs d'écran seulement */
+.login-card h1 { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 .login-card h1 span { color: var(--accent); }
 .slogan { height: 22px; font-weight: 600; color: var(--primary); font-size: 14px; transition: opacity 0.4s; }
 
@@ -104,7 +113,12 @@ code { background: #f1f5f9; padding: 2px 6px; border-radius: 5px; font-size: 13p
   will-change: transform;
 }
 .fond-anime .bulle { border-radius: 50%; background: rgba(255, 255, 255, 0.12); border: 2px solid rgba(255, 255, 255, 0.18); }
-.fond-anime .bulle.rouge { background: rgba(215, 20, 26, 0.28); border-color: rgba(255, 120, 120, 0.35); }
+.fond-anime .bulle.c0 { background: rgba(224, 54, 44, 0.35); border-color: rgba(255, 140, 130, 0.4); }
+.fond-anime .bulle.c1 { background: rgba(255, 210, 63, 0.35); border-color: rgba(255, 230, 140, 0.45); }
+.fond-anime .bulle.c2 { background: rgba(217, 60, 207, 0.35); border-color: rgba(240, 140, 230, 0.4); }
+.fond-anime .bulle.c3 { background: rgba(111, 209, 58, 0.35); border-color: rgba(170, 235, 130, 0.4); }
+.fond-anime .bulle.c4 { background: rgba(127, 224, 240, 0.35); border-color: rgba(180, 240, 250, 0.45); }
+.fond-anime .bulle.c5 { background: rgba(155, 76, 240, 0.4); border-color: rgba(200, 160, 250, 0.45); }
 @keyframes flotter {
   0% { transform: translate(0, 0) rotate(0deg); opacity: 0; }
   10% { opacity: 1; }
@@ -143,11 +157,11 @@ code { background: #f1f5f9; padding: 2px 6px; border-radius: 5px; font-size: 13p
 .btn-installer:hover { background: var(--primary); color: #fff; border-style: solid; }
 .guide-install {
   position: fixed; top: 0; right: 0; bottom: 0; left: 0; z-index: 1000; display: flex; align-items: flex-end; justify-content: center;
-  background: rgba(5, 12, 35, 0); transition: background 0.25s;
+  background: rgba(20, 10, 45, 0); transition: background 0.25s;
 }
-.guide-install.ouvert { background: rgba(5, 12, 35, 0.6); }
+.guide-install.ouvert { background: rgba(20, 10, 45, 0.6); }
 .gi-feuille {
-  --gi-fond: #0b1a45; --gi-carte: #13245c; --gi-trait: #2a3d7a; --gi-texte: #eef1fb; --gi-gris: #a9b3d1; --gi-rouge: #ff6b70;
+  --gi-fond: #2a1659; --gi-carte: #35206e; --gi-trait: #4a3285; --gi-texte: #f3eefc; --gi-gris: #c3b6e0; --gi-rouge: #ff7ad9;
   width: 100%; max-width: 560px; max-height: 92vh; overflow-y: auto; overscroll-behavior: contain;
   background: var(--gi-fond); color: var(--gi-texte); border-radius: 22px 22px 0 0;
   padding: 10px 20px calc(24px + env(safe-area-inset-bottom)); text-align: left;
@@ -165,7 +179,7 @@ code { background: #f1f5f9; padding: 2px 6px; border-radius: 5px; font-size: 13p
 .gi-atouts {
   list-style: none; margin: 18px 0; padding: 14px; border-radius: 14px;
   display: grid; grid-template-columns: 1fr 1fr; gap: 12px 14px; font-size: 14px; line-height: 1.35;
-  background: linear-gradient(135deg, rgba(215, 20, 26, 0.22), rgba(27, 47, 143, 0.35)); border: 1px solid rgba(255, 107, 112, 0.45);
+  background: linear-gradient(135deg, rgba(181, 23, 158, 0.22), rgba(124, 58, 237, 0.35)); border: 1px solid rgba(240, 120, 210, 0.45);
 }
 .gi-atouts li { display: flex; gap: 8px; align-items: flex-start; }
 .gi-atouts span { flex: none; }
@@ -206,7 +220,7 @@ code { background: #f1f5f9; padding: 2px 6px; border-radius: 5px; font-size: 13p
 .gi-barre.gi-centre i { flex: 0 0 22px; }
 .gi-bouton {
   flex: none; min-width: 44px; height: 44px; padding: 0 14px; border-radius: 10px; display: grid; place-items: center;
-  background: var(--accent); color: #fff; font-weight: 800; font-size: 17px; box-shadow: 0 0 0 4px rgba(215, 20, 26, 0.25);
+  background: var(--accent); color: #fff; font-weight: 800; font-size: 17px; box-shadow: 0 0 0 4px rgba(181, 23, 158, 0.25);
 }
 .gi-choix { display: flex; justify-content: space-between; align-items: center; padding: 13px 16px; font-size: 15px; }
 .gi-choix span { color: var(--gi-rouge); font-size: 18px; }
@@ -236,8 +250,8 @@ button:disabled { opacity: 0.6; cursor: wait; }
   transition: transform 0.3s;
 }
 .brand { font-size: 20px; font-weight: 700; padding: 0 6px 14px; display: flex; align-items: center; gap: 10px; }
-.brand img { width: 44px; height: 44px; border-radius: 50%; background: #fff; object-fit: contain; padding: 2px; border: 2px solid var(--accent); }
-.brand span { color: #ff8a8d; }
+.brand img { width: 48px; height: 48px; border-radius: 12px; background: #fff; object-fit: contain; padding: 2px; border: 2px solid var(--case-jaune); }
+.brand span { color: var(--case-jaune); }
 .role-badge {
   background: rgba(255, 255, 255, 0.12);
   border-radius: 8px;
@@ -252,7 +266,7 @@ button:disabled { opacity: 0.6; cursor: wait; }
   display: flex;
   gap: 10px;
   align-items: center;
-  color: #cbd5e1;
+  color: #d9cff0;
   text-decoration: none;
   padding: 10px 12px;
   border-radius: 8px;
@@ -401,7 +415,7 @@ button:disabled { opacity: 0.6; cursor: wait; }
 table { width: 100%; border-collapse: collapse; font-size: 14px; }
 th, td { padding: 11px 12px; text-align: left; border-bottom: 1px solid var(--border); vertical-align: top; }
 thead th { background: var(--bg); font-weight: 600; color: var(--muted); font-size: 13px; text-transform: uppercase; }
-tbody tr:hover { background: #f6f8fd; }
+tbody tr:hover { background: #f8f5fe; }
 
 /* Emploi du temps */
 
@@ -424,7 +438,7 @@ tbody tr:hover { background: #f6f8fd; }
 .notifs li.cliquable { cursor: pointer; }
 .notifs li.cliquable:hover { border-color: var(--primary); }
 .notif-fleche { margin-left: auto; align-self: center; font-size: 22px; color: var(--muted); }
-.notifs li.unread { background: var(--primary-light); border-color: #c5cff0; }
+.notifs li.unread { background: var(--primary-light); border-color: #d9c9f7; }
 .notif-ico { font-size: 22px; }
 .notifs p { margin-bottom: 2px; }
 
@@ -451,7 +465,7 @@ tbody tr:hover { background: #f6f8fd; }
   justify-content: center;
   gap: 8px;
   padding: 16px;
-  border: 2px dashed #c5cff0;
+  border: 2px dashed #d9c9f7;
   border-radius: 10px;
   background: var(--primary-light);
   color: var(--primary);
@@ -487,7 +501,7 @@ a.tel { color: var(--primary); text-decoration: none; white-space: nowrap; font-
 .devoir.imprime { border-left-color: var(--success); opacity: 0.75; }
 /* Notes */
 .note-carte[role="button"] { cursor: pointer; }
-.note-carte[role="button"]:hover { border-color: var(--primary); background: #f9fafe; }
+.note-carte[role="button"]:hover { border-color: var(--primary); background: #fbf9ff; }
 .note-val { font-size: 22px; font-weight: 800; white-space: nowrap; }
 .note-val small { font-size: 13px; font-weight: 600; color: var(--muted); }
 .note-val.bonne { color: var(--success); }
@@ -590,7 +604,7 @@ img.avatar { object-fit: cover; display: block; }
 .fin-chart .prevu { fill-opacity: 0.35; stroke-dasharray: 3 2; stroke-width: 1.5; }
 .fin-chart .b-rev.prevu { stroke: #2a78d6; }
 .fin-chart .b-sal.prevu { stroke: #eb6834; }
-.fin-chart .zone-prev { fill: #f4f6fb; }
+.fin-chart .zone-prev { fill: #f6f3fc; }
 .fin-chart .cible { fill: transparent; cursor: pointer; }
 .fin-chart .cible.actif { fill: rgba(11, 11, 11, 0.04); }
 .fin-tip { position: absolute; top: 0; width: 180px; background: #fff; border: 1px solid rgba(11, 11, 11, 0.1); border-radius: 10px;
@@ -598,7 +612,7 @@ img.avatar { object-fit: cover; display: block; }
 .fin-tip:not([hidden]) { display: flex; flex-direction: column; gap: 3px; }
 .fin-tip span { display: flex; align-items: center; gap: 6px; }
 .prev-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; }
-.prev-mois { border: 1px dashed #c5cff0; border-radius: 10px; padding: 12px 14px; display: flex; flex-direction: column; gap: 2px; font-size: 14px; }
+.prev-mois { border: 1px dashed #d9c9f7; border-radius: 10px; padding: 12px 14px; display: flex; flex-direction: column; gap: 2px; font-size: 14px; }
 .prev-mois strong { text-transform: capitalize; margin-bottom: 4px; }
 .fin-table td { vertical-align: middle; }
 .fin-table select { padding: 7px 8px; border: 1px solid var(--border); border-radius: 8px; font: inherit; background: #fff; }
