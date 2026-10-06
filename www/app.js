@@ -243,7 +243,7 @@ document.addEventListener('touchmove', e => { if (e.touches.length > 1) e.preven
   }
   fond.innerHTML = html;
   // Phrases d'accueil qui changent toutes les 3 secondes
-  const phrases = ['Bienvenue à La Marelle 👋', 'Apprendre en s\'amusant 🎨', 'Suivez la journée de vos enfants 🧸',
+  const phrases = ['Bienvenue à La Marelle Kids 👋', 'Apprendre en s\'amusant 🎨', 'Suivez la journée de vos enfants 🧸',
     'Chaque jour, un peu plus grand 🌱', 'Ensemble vers la réussite 🏆'];
   let n = 0;
   setInterval(() => {
@@ -631,7 +631,7 @@ function dessinerGuideInstall() {
   $('guide-install').querySelector('.gi-feuille').innerHTML = `
     <div class="gi-poignee"></div>
     <div class="gi-tete">
-      <div><h2 id="gi-titre">L'appli La Marelle sur votre téléphone</h2>
+      <div><h2 id="gi-titre">L'appli La Marelle Kids sur votre téléphone</h2>
         <p class="gi-sous">Gratuite, sans App Store ni Play Store. 20 secondes.</p></div>
       <button type="button" class="gi-fermer" onclick="fermerGuideInstall()" aria-label="Fermer">✕</button>
     </div>
@@ -1090,7 +1090,7 @@ function carteEditionEleve() {
 
 // ---- Comptes parents créés automatiquement : identifiants à transmettre (une seule fois) ----
 function messageIdentifiants(p) {
-  return `Bonjour, voici votre accès à l'Espace Parents de l'école (application La Marelle) :\n`
+  return `Bonjour, voici votre accès à l'Espace Parents de l'école (application La Marelle Kids) :\n`
     + `Numéro : ${p.telephone}\nMot de passe : ${p.password} (votre numéro)\n`
     + `Vous pouvez changer le mot de passe dans « Mon profil ».\n${API_MOBILE}`;
 }
