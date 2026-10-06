@@ -68,7 +68,7 @@ Le PC ne peut pas rester le serveur de l'école. Solution gratuite pour démarre
    - Start command : `node server/index.js`
    - Variables d'environnement : `DATABASE_URL` = l'URL Neon, `DATABASE_SSL` = `true`,
      `JWT_SECRET` = une longue chaîne aléatoire.
-3. Render donne une adresse **HTTPS** (ex. `https://lamarelle.onrender.com`) :
+3. Render donne une adresse **HTTPS** (ex. `https://lamarelle-fnll.onrender.com`) :
    - **iPhone et Android** : ouvrir cette adresse → « Sur l'écran d'accueil » / « Installer ».
    - **APK Android** : mettre cette adresse dans `API_MOBILE` (www/config.js) puis `npm run apk`.
 
