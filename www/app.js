@@ -6,7 +6,7 @@
    ========================================================= */
 
 // ================= CONSTANTES =================
-// Les classes (« قسم تحضيري ياسمين »…) viennent de la base (page « Classes »)
+// Les classes (« Classe A »…) viennent de la base (page « Classes »)
 Object.defineProperty(window, 'CLASSES', { get: () => (DB.classes || []).map(c => c.nom) });
 const CRENEAUX = ['08:00-10:00', '10:00-12:00', '14:00-16:00', '16:00-18:00'];
 const JOURNEE = 'Journée';
@@ -1913,7 +1913,7 @@ const VUES = {
           </div>`).join('') : '<p class="small muted">Aucune classe.</p>'}
         </div>
         <form class="grid-form" onsubmit="ajouterClasse(event)">
-          <div class="field"><label>Nouvelle classe</label><input id="cl-nom" required maxlength="60" placeholder="Ex : قسم تحضيري ياسمين"></div>
+          <div class="field"><label>Nouvelle classe</label><input id="cl-nom" required maxlength="60" placeholder="Ex : Classe A"></div>
           <div class="field full"><button class="btn btn-primary btn-sm">+ Ajouter une classe</button></div>
         </form>
       </div>`;

@@ -32,16 +32,16 @@ export async function initialiser({ reset = false } = {}) {
   await q(`INSERT INTO users (nom, email, telephone, password, role) VALUES
     ('M. Karim Trabelsi', 'admin@ecole.tn', '98 111 222', $1, 'admin')`, [mdp]);
 
-  for (const nom of ['قسم تحضيري ياسمين', 'قسم تحضيري فل', 'قسم تحضيري أقحوان'])
+  for (const nom of ['Classe A', 'Classe B', 'Classe C'])
     await q('INSERT INTO classes (nom) VALUES ($1) ON CONFLICT DO NOTHING', [nom]);
 
   // Famille Hamdi : 3 enfants, même numéro de père et de mère → un seul Espace Parents avec les 3
   const eleves = [
-    ['Youssef Hamdi', 'قسم تحضيري ياسمين', '2021-03-14', 'Mohamed Hamdi', '20 100 200', 'Amel Hamdi', '50 100 200', 'Allergie aux arachides'],
-    ['Lina Hamdi', 'قسم تحضيري فل', '2022-06-02', 'Mohamed Hamdi', '20 100 200', 'Amel Hamdi', '50 100 200', null],
-    ['Adam Hamdi', 'قسم تحضيري أقحوان', '2023-01-20', 'Mohamed Hamdi', '20 100 200', 'Amel Hamdi', '50 100 200', null],
-    ['Mariem Chaabane', 'قسم تحضيري ياسمين', '2021-09-08', 'Ali Chaabane', '20 300 400', null, null, null],
-    ['Salma Khelifi', 'قسم تحضيري فل', '2021-11-30', null, null, 'Nadia Khelifi', '50 700 800', 'Récupérée par sa grand-mère le mercredi']
+    ['Youssef Hamdi', 'Classe A', '2021-03-14', 'Mohamed Hamdi', '20 100 200', 'Amel Hamdi', '50 100 200', 'Allergie aux arachides'],
+    ['Lina Hamdi', 'Classe B', '2022-06-02', 'Mohamed Hamdi', '20 100 200', 'Amel Hamdi', '50 100 200', null],
+    ['Adam Hamdi', 'Classe C', '2023-01-20', 'Mohamed Hamdi', '20 100 200', 'Amel Hamdi', '50 100 200', null],
+    ['Mariem Chaabane', 'Classe A', '2021-09-08', 'Ali Chaabane', '20 300 400', null, null, null],
+    ['Salma Khelifi', 'Classe B', '2021-11-30', null, null, 'Nadia Khelifi', '50 700 800', 'Récupérée par sa grand-mère le mercredi']
   ];
   for (const e of eleves)
     await q(`INSERT INTO eleves (nom, classe, date_naissance, nom_pere, tel_pere, nom_mere, tel_mere, infos)
@@ -52,8 +52,8 @@ export async function initialiser({ reset = false } = {}) {
 
 
   await q(`INSERT INTO publications (type, classe, matiere, date, description) VALUES
-    ('cours', 'قسم تحضيري ياسمين', 'Langue arabe', CURRENT_DATE, 'La lettre « ب » : écriture et mots qui commencent par ب.'),
-    ('travail', 'قسم تحضيري ياسمين', 'Français', CURRENT_DATE + 1, 'Colorier les dessins qui commencent par le son « a ».')`);
+    ('cours', 'Classe A', 'Langue arabe', CURRENT_DATE, 'La lettre « ب » : écriture et mots qui commencent par ب.'),
+    ('travail', 'Classe A', 'Français', CURRENT_DATE + 1, 'Colorier les dessins qui commencent par le son « a ».')`);
 
   // Cantine : Youssef et Lina inscrits (menu de la semaine : à envoyer en photo par l'administration)
   const [pere] = await q(`SELECT id FROM users WHERE tel_cle = tel_cle('20 100 200')`);

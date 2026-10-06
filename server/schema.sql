@@ -36,7 +36,7 @@ CREATE TABLE IF NOT EXISTS users (
 );
 CREATE UNIQUE INDEX IF NOT EXISTS uq_parent_tel ON users(tel_cle) WHERE role = 'parent';
 
--- Classes : « قسم تحضيري ياسمين », « قسم تحضيري فل », « قسم تحضيري أقحوان »… (page « Classes »)
+-- Classes : « Classe A », « Classe B », « Classe C »… (page « Classes »)
 CREATE TABLE IF NOT EXISTS classes (
   nom        TEXT PRIMARY KEY,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
@@ -221,20 +221,20 @@ DROP TABLE IF EXISTS enseignants;
 ALTER TABLE classes DROP COLUMN IF EXISTS niveau;
 DO $$ BEGIN
   IF NOT EXISTS (SELECT 1 FROM parametres WHERE cle = 'classes_preparatoires') THEN
-    INSERT INTO classes (nom) VALUES ('قسم تحضيري ياسمين'), ('قسم تحضيري فل'), ('قسم تحضيري أقحوان') ON CONFLICT DO NOTHING;
-    DELETE FROM classes c WHERE nom NOT IN ('قسم تحضيري ياسمين', 'قسم تحضيري فل', 'قسم تحضيري أقحوان')
+    INSERT INTO classes (nom) VALUES ('Classe A'), ('Classe B'), ('Classe C') ON CONFLICT DO NOTHING;
+    DELETE FROM classes c WHERE nom NOT IN ('Classe A', 'Classe B', 'Classe C')
       AND NOT EXISTS (SELECT 1 FROM eleves e WHERE e.classe = c.nom);
     INSERT INTO parametres (cle, valeur) VALUES ('classes_preparatoires', 'true');
   END IF;
 END $$;
 -- Une seule fois : élèves, appels, cours et emplois du temps des anciennes classes déplacés dans les
--- classes préparatoires (Grande section A → ياسمين, Moyenne section A → فل, Petite section A → أقحوان),
+-- classes préparatoires (Grande section A → Classe A, Moyenne section A → Classe B, Petite section A → Classe C),
 -- puis les anciennes classes supprimées
 DO $$ BEGIN
   IF NOT EXISTS (SELECT 1 FROM parametres WHERE cle = 'anciennes_sections_deplacees') THEN
     CREATE TEMP TABLE deplacement (ancienne TEXT, nouvelle TEXT) ON COMMIT DROP;
-    INSERT INTO deplacement VALUES ('Grande section A', 'قسم تحضيري ياسمين'), ('Moyenne section A', 'قسم تحضيري فل'),
-      ('Petite section A', 'قسم تحضيري أقحوان');
+    INSERT INTO deplacement VALUES ('Grande section A', 'Classe A'), ('Moyenne section A', 'Classe B'),
+      ('Petite section A', 'Classe C');
     UPDATE eleves e SET classe = d.nouvelle FROM deplacement d WHERE e.classe = d.ancienne;
     UPDATE absences a SET classe = d.nouvelle FROM deplacement d WHERE a.classe = d.ancienne;
     UPDATE publications p SET classe = d.nouvelle FROM deplacement d WHERE p.classe = d.ancienne;
@@ -247,3 +247,16 @@ DO $$ BEGIN
 END $$;
 -- Notifications lues : date de lecture (effacées 3 jours après ; les anciennes lectures comptent à partir d'aujourd'hui)
 ALTER TABLE notifications_lues ADD COLUMN IF NOT EXISTS lu_at TIMESTAMPTZ NOT NULL DEFAULT now();
+-- Une seule fois : classes renommées Classe A, Classe B, Classe C (élèves, cours et emplois du temps suivent
+-- grâce à ON UPDATE CASCADE ; les absences gardent le nom de la classe, mises à jour à la main)
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM parametres WHERE cle = 'classes_lettres') THEN
+    CREATE TEMP TABLE renommage (ancien TEXT, nouveau TEXT) ON COMMIT DROP;
+    INSERT INTO renommage VALUES ('قسم تحضيري ياسمين', 'Classe A'), ('قسم تحضيري فل', 'Classe B'),
+      ('قسم تحضيري أقحوان', 'Classe C');
+    DELETE FROM renommage r WHERE EXISTS (SELECT 1 FROM classes c WHERE c.nom = r.nouveau);
+    UPDATE absences a SET classe = r.nouveau FROM renommage r WHERE a.classe = r.ancien;
+    UPDATE classes c SET nom = r.nouveau FROM renommage r WHERE c.nom = r.ancien;
+    INSERT INTO parametres (cle, valeur) VALUES ('classes_lettres', 'true');
+  END IF;
+END $$;

@@ -312,7 +312,7 @@ app.get('/api/data', auth, async (req, res) => {
     cantineInscriptions, cantineMenus, notifications: n, classes: c, evenements: ev, ...constantes });
 });
 
-// ================= CLASSES (« قسم تحضيري ياسمين »…) =================
+// ================= CLASSES (« Classe A »…) =================
 app.post('/api/classes', auth, equipe, async (req, res) => {
   const nom = texte(req.body.nom, 'Nom de la classe').replace(/\s+/g, ' ').slice(0, 60);
   const r = await q('INSERT INTO classes (nom) VALUES ($1) ON CONFLICT DO NOTHING RETURNING nom', [nom]);

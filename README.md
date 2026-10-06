@@ -124,7 +124,7 @@ Pour l'App Store : compte Apple Developer (99 $/an) et un serveur en **HTTPS** (
 - **Événements** : publiés par l'administration → notification aux parents et à l'équipe.
 - **Réclamations** : le parent écrit (enfant concerné, type, pièce jointe 📷 / 📎) à l'administration,
   qui répond ; la réponse arrive dans l'Espace Parents avec une notification.
-- **Classes** : قسم تحضيري ياسمين, قسم تحضيري فل, قسم تحضيري أقحوان (ajout / suppression), liste PDF imprimable.
+- **Classes** : Classe A, Classe B, Classe C (ajout / suppression), liste PDF imprimable.
 - **Administrateurs** : chaque administrateur peut ajouter, modifier ou supprimer les autres comptes (jamais le sien).
 - Les anciens comptes « Direction » sont devenus des comptes Administration (même email, même mot de passe).
 
