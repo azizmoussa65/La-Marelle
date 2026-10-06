@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#0b1a45">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="La Marelle">
+  <title>La Marelle</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" type="image/png" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- ================= PAGE DE CONNEXION ================= -->
+  <section id="login-page" class="login-page">
+    <!-- Fond animé (fournitures et étoiles qui montent) : rempli par app.js -->
+    <div class="fond-anime" id="fond-anime" aria-hidden="true"></div>
+    <div class="login-card">
+      <img class="logo-img" src="img/logo.png" alt="Logo La Marelle">
+      <h1>La <span>Marelle</span></h1>
+      <p class="slogan" id="slogan" aria-live="polite">Bienvenue à La Marelle 👋</p>
+
+      <form id="login-form" onsubmit="login(event)">
+        <label for="login-id">Numéro de téléphone <span class="muted small">(parents)</span> ou email</label>
+        <input type="text" id="login-id" required autocomplete="username" autocapitalize="off">
+
+        <label for="login-password">Mot de passe</label>
+        <input type="password" id="login-password" required autocomplete="current-password" placeholder="••••">
+        <p class="small muted">Parents : au départ, le mot de passe est votre numéro de téléphone.</p>
+
+        <p id="login-error" class="error"></p>
+        <button class="btn btn-primary btn-block" type="submit">Se connecter</button>
+      </form>
+
+      <!-- Installation sur le téléphone (bouton caché dans l'application installée) : guide en bas de l'écran -->
+      <button type="button" id="btn-installer" class="btn-installer hidden" onclick="ouvrirGuideInstall()">
+        📲 Installer l'application sur mon téléphone</button>
+    </div>
+    <p class="signature signature-login">Powered by <a href="https://www.facebook.com/share/1d9yXyNn6S/" target="_blank" rel="noopener"><strong>N&amp;H</strong></a></p>
+  </section>
+
+  <!-- ================= APPLICATION ================= -->
+  <div id="app" class="app hidden">
+    <aside class="sidebar" id="sidebar">
+      <div class="brand"><img src="img/logo.png" alt="">La <span>Marelle</span></div>
+      <div class="role-badge" id="role-badge"></div>
+      <nav id="menu" class="menu"></nav>
+      <button class="btn btn-logout" onclick="logout()">⎋ Déconnexion</button>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <button class="burger" onclick="toggleSidebar()" aria-label="Menu">☰</button>
+        <h2 id="page-title"></h2>
+        <div class="topbar-right">
+          <button class="bell" id="bell" onclick="go('notifs')" aria-label="Notifications">
+            🔔<span id="bell-count" class="bell-count hidden"></span>
+          </button>
+          <div class="user-chip" id="user-chip"></div>
+        </div>
+      </header>
+
+      <div id="content" class="content"></div>
+      <p class="signature">Powered by <a href="https://www.facebook.com/share/1d9yXyNn6S/" target="_blank" rel="noopener"><strong>N&amp;H</strong></a></p>
+    </main>
+
+    <!-- Voile derrière le menu latéral (mobile) -->
+    <div class="overlay" id="overlay" onclick="toggleSidebar(false)"></div>
+
+    <!-- Barre d'onglets en bas (mobile) -->
+    <nav class="tabbar" id="tabbar"></nav>
+  </div>
+
+  <div id="toast" class="toast"></div>
+
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+  <script>
+    // PWA : mise en cache hors-ligne (pas nécessaire dans l'app native Capacitor)
+    if ('serviceWorker' in navigator && location.protocol.startsWith('http') && !window.Capacitor) {
+      navigator.serviceWorker.register('sw.js').catch(() => {});
+    }
+  </script>
+</body>
+</html>

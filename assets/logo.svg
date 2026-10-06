@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <rect width="1024" height="1024" fill="#ffffff"/>
+  <!-- Marelle : ciel + cases 1 à 6 -->
+  <g font-family="Arial, Helvetica, sans-serif" font-weight="bold" font-size="64" fill="#ffffff" text-anchor="middle">
+    <path d="M387 175 A125 125 0 0 1 637 175 Z" fill="#0b1a45"/>
+    <rect x="387" y="185" width="120" height="120" rx="18" fill="#e11d2a"/>
+    <rect x="517" y="185" width="120" height="120" rx="18" fill="#2f5bea"/>
+    <rect x="452" y="315" width="120" height="120" rx="18" fill="#f5b301"/>
+    <rect x="387" y="445" width="120" height="120" rx="18" fill="#22a06b"/>
+    <rect x="517" y="445" width="120" height="120" rx="18" fill="#e11d2a"/>
+    <rect x="452" y="575" width="120" height="120" rx="18" fill="#2f5bea"/>
+    <text x="447" y="267">5</text><text x="577" y="267">6</text>
+    <text x="512" y="397">4</text>
+    <text x="447" y="527">2</text><text x="577" y="527">3</text>
+    <text x="512" y="657">1</text>
+  </g>
+  <text x="512" y="830" font-family="Georgia, 'Times New Roman', serif" font-size="120" font-weight="bold"
+    text-anchor="middle" fill="#0b1a45">La <tspan fill="#e11d2a">Marelle</tspan></text>
+  <text x="512" y="910" font-family="Georgia, 'Times New Roman', serif" font-size="48" letter-spacing="4"
+    text-anchor="middle" fill="#0b1a45">ÉCOLE PRÉPARATOIRE</text>
+</svg>
