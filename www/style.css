@@ -1,3 +1,8 @@
+/* ================= POLICES (dans l'application : fonctionnent hors-ligne) ================= */
+/* Nunito pour le texte, Baloo 2 pour les titres : rondes et lisibles, dans l'esprit du logo. Licences : fonts/LICENCE.txt */
+@font-face { font-family: 'Nunito'; font-style: normal; font-weight: 400 800; font-display: swap; src: url(fonts/nunito.woff2) format('woff2'); }
+@font-face { font-family: 'Baloo 2'; font-style: normal; font-weight: 500 800; font-display: swap; src: url(fonts/baloo2.woff2) format('woff2'); }
+
 /* ================= VARIABLES ================= */
 /* Couleurs de La Marelle (logo « La Marelle Kids ») : violet + magenta, et les cases colorées de la marelle.
    Contrastes vérifiés : texte blanc sur violet et sur magenta, violet et magenta sur le fond ≥ 4,5:1. */
@@ -14,12 +19,12 @@
   --danger-light: #fee2e2;
   --warning: #b45309;
   --warning-light: #fef3c7;
-  --bg: #f8f5fd;
+  --bg: #fbf5ea;             /* crème clair (même famille que la carte de connexion) */
   --card: #ffffff;
   --carte-connexion: #fff7e8;  /* crème : carte de la page de connexion (contrastes des textes ≥ 5:1) */
   --text: #1f1633;
   --muted: #5f5873;
-  --border: #e7e0f3;
+  --border: #ece3d3;
   --sidebar: #2a1659;        /* violet foncé */
   --sidebar-hover: #3b2178;
   /* Cases de la marelle du logo */
@@ -27,8 +32,11 @@
   --case-vert: #6fd13a; --case-cyan: #7fe0f0; --case-violet: #9b4cf0; --orange-kids: #f0955a;
   --marelle: linear-gradient(90deg, var(--case-rouge) 0 16.6%, var(--case-jaune) 0 33.3%, var(--case-rose) 0 50%,
     var(--case-vert) 0 66.6%, var(--case-cyan) 0 83.3%, var(--case-violet) 0);
-  --radius: 12px;
-  --shadow: 0 2px 10px rgba(15, 23, 42, 0.06);
+  --radius: 16px;
+  --shadow: 0 1px 0 rgba(42, 22, 89, 0.04), 0 8px 24px rgba(42, 22, 89, 0.06);
+  --titre: 'Baloo 2', 'Nunito', "Segoe UI", Roboto, Arial, sans-serif;
+  --champ: #fffdf9;          /* fond des champs de saisie */
+  --doux: #f4ecdf;           /* boutons clairs, en-têtes de tableaux */
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -36,7 +44,7 @@
 html { touch-action: pan-x pan-y; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
 
 body {
-  font-family: "Segoe UI", Roboto, Arial, sans-serif;
+  font-family: 'Nunito', "Segoe UI", Roboto, Arial, sans-serif;
   background: var(--bg);
   color: var(--text);
   font-size: 15px;
@@ -46,27 +54,28 @@ body {
 .hidden { display: none !important; }
 .muted { color: var(--muted); }
 .small { font-size: 13px; }
-code { background: #f1f5f9; padding: 2px 6px; border-radius: 5px; font-size: 13px; }
+code { background: var(--doux); padding: 2px 6px; border-radius: 5px; font-size: 13px; }
 
 /* ================= BOUTONS ================= */
 .btn {
   border: none;
-  border-radius: 8px;
+  border-radius: 12px;
   padding: 10px 18px;
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
   transition: 0.2s;
   font-family: inherit;
 }
-.btn-primary { background: var(--primary); color: #fff; }
+.btn-primary { background: var(--primary); color: #fff; box-shadow: 0 3px 0 var(--primary-dark); }
 .btn-primary:hover { background: var(--primary-dark); }
+.btn-primary:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--primary-dark); }
 .btn-danger { background: var(--danger-light); color: var(--danger); }
 .btn-danger:hover { background: var(--danger); color: #fff; }
 .btn-success { background: var(--success-light); color: var(--success); }
 .btn-success:hover { background: var(--success); color: #fff; }
-.btn-light { background: #eef2f7; color: var(--text); }
-.btn-light:hover { background: #e2e8f0; }
+.btn-light { background: var(--doux); color: var(--text); }
+.btn-light:hover { background: #ebdfcc; }
 .btn-sm { padding: 6px 12px; font-size: 13px; }
 .btn-block { width: 100%; }
 
@@ -166,12 +175,14 @@ code { background: #f1f5f9; padding: 2px 6px; border-radius: 5px; font-size: 13p
   width: 100%;
   padding: 11px 14px;
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: 12px;
+  background: #fff;
+  font-family: inherit;
   font-size: 15px;
 }
-.login-card input:focus { outline: 2px solid var(--primary-light); border-color: var(--primary); }
+.login-card input:focus { outline: 3px solid rgba(124, 58, 237, 0.18); border-color: var(--primary); }
 .error { color: var(--danger); font-size: 13px; min-height: 20px; margin: 8px 0; }
-.login-card .btn-primary { background: var(--accent); font-size: 15px; padding: 12px 18px; }
+.login-card .btn-primary { background: var(--accent); font-size: 15px; padding: 12px 18px; box-shadow: 0 3px 0 var(--accent-dark); }
 .login-card .btn-primary:hover { background: var(--accent-dark); }
 
 /* ---- Installation sur le téléphone : bouton de la page de connexion + guide en bas de l'écran ---- */
@@ -288,12 +299,15 @@ button:disabled { opacity: 0.6; cursor: wait; }
   z-index: 20;
   transition: transform 0.3s;
 }
-.brand { font-size: 20px; font-weight: 700; padding: 0 6px 14px; display: flex; align-items: center; gap: 10px; }
+/* Bande des 6 cases de la marelle en haut du menu */
+.sidebar::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 5px; background: var(--marelle); }
+.brand { font-family: var(--titre); font-size: 22px; font-weight: 700; line-height: 1.1; padding: 0 6px 14px; display: flex; align-items: center; gap: 10px; }
 .brand img { width: 48px; height: 48px; border-radius: 12px; background: #fff; object-fit: contain; padding: 2px; border: 2px solid var(--case-jaune); }
 .brand span { color: var(--case-jaune); }
 .role-badge {
-  background: rgba(255, 255, 255, 0.12);
-  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px dashed rgba(255, 255, 255, 0.28);
+  border-radius: 999px;
   padding: 8px 12px;
   font-size: 13px;
   margin-bottom: 18px;
@@ -307,20 +321,37 @@ button:disabled { opacity: 0.6; cursor: wait; }
   align-items: center;
   color: #d9cff0;
   text-decoration: none;
-  padding: 10px 12px;
-  border-radius: 8px;
+  padding: 8px 10px;
+  border-radius: 12px;
   font-size: 14px;
+  font-weight: 600;
   transition: 0.2s;
 }
+/* L'icône de chaque page sur une case de la marelle (couleurs du logo, à tour de rôle) */
+.menu a > span:first-child {
+  flex: none; width: 30px; height: 30px; border-radius: 9px; display: grid; place-items: center; font-size: 15px;
+  background: var(--case, var(--case-violet)); box-shadow: 0 2px 0 rgba(0, 0, 0, 0.18); transform: rotate(-5deg); transition: transform 0.2s;
+}
+.menu a:nth-child(even) > span:first-child { transform: rotate(5deg); }
+.menu a:nth-child(6n+1) { --case: var(--case-rouge); }
+.menu a:nth-child(6n+2) { --case: var(--case-jaune); }
+.menu a:nth-child(6n+3) { --case: var(--case-rose); }
+.menu a:nth-child(6n+4) { --case: var(--case-vert); }
+.menu a:nth-child(6n+5) { --case: var(--case-cyan); }
+.menu a:nth-child(6n+6) { --case: var(--case-violet); }
 .menu a:hover { background: var(--sidebar-hover); color: #fff; }
-.menu a.active { background: var(--primary); color: #fff; box-shadow: inset 4px 0 0 var(--accent); }
-.btn-logout { background: rgba(255, 255, 255, 0.08); color: #fff; margin-top: 12px; }
+.menu a:hover > span:first-child { transform: rotate(0) scale(1.08); }
+.menu a.active { background: var(--carte-connexion); color: var(--sidebar); font-weight: 800; }
+.menu a.active > span:first-child { transform: rotate(0); }
+.btn-logout { background: rgba(255, 255, 255, 0.08); color: #fff; margin-top: 12px; border: 1px solid rgba(255, 255, 255, 0.14); }
 .btn-logout:hover { background: var(--danger); }
 
 .main { flex: 1; margin-left: 250px; min-width: 0; }
 
 .topbar {
-  background: var(--card);
+  background: rgba(255, 251, 244, 0.92);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
   display: flex;
   align-items: center;
   gap: 14px;
@@ -330,12 +361,12 @@ button:disabled { opacity: 0.6; cursor: wait; }
   top: 0;
   z-index: 10;
 }
-.topbar h2 { font-size: 20px; flex: 1; }
+.topbar h2 { font-family: var(--titre); font-size: 23px; font-weight: 700; line-height: 1.2; flex: 1; color: var(--sidebar); }
 .topbar-right { display: flex; align-items: center; gap: 14px; }
 .burger { display: none; background: none; border: none; font-size: 24px; cursor: pointer; }
 .bell {
   position: relative;
-  background: var(--bg);
+  background: var(--doux);
   border: none;
   font-size: 18px;
   width: 42px; height: 42px;
@@ -360,7 +391,7 @@ button:disabled { opacity: 0.6; cursor: wait; }
 .avatar {
   width: 36px; height: 36px;
   border-radius: 50%;
-  background: var(--primary);
+  background: var(--av, var(--primary));
   color: #fff;
   display: flex;
   align-items: center;
@@ -381,37 +412,67 @@ button:disabled { opacity: 0.6; cursor: wait; }
 /* ================= CARTES ================= */
 .card {
   background: var(--card);
+  border: 1px solid var(--border);
   border-radius: var(--radius);
   box-shadow: var(--shadow);
   padding: 22px;
   margin-bottom: 22px;
 }
-.card h3 { font-size: 17px; margin-bottom: 16px; }
+.card h3 { font-family: var(--titre); font-size: 19px; font-weight: 700; line-height: 1.25; margin-bottom: 14px; color: var(--sidebar); }
 
 .welcome {
-  background: linear-gradient(120deg, var(--sidebar), var(--primary));
+  background: radial-gradient(circle at 92% 120%, rgba(255, 210, 63, 0.25), transparent 45%),
+              linear-gradient(125deg, var(--sidebar) 0%, var(--primary) 65%, var(--accent) 130%);
   color: #fff;
-  border-radius: var(--radius);
-  padding: 24px;
+  border-radius: 20px;
+  padding: 24px 200px 24px 24px;
   margin-bottom: 22px;
-  border-bottom: 4px solid var(--accent);
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(42, 22, 89, 0.18);
 }
-.welcome h3 { font-size: 22px; }
+.welcome h3 { font-family: var(--titre); font-size: 26px; font-weight: 700; line-height: 1.2; }
+.welcome p { opacity: 0.92; }
+/* Les 6 cases du logo, dessinées avec une seule forme et ses ombres */
+.welcome::after {
+  content: ''; position: absolute; right: 162px; top: calc(50% - 20px); width: 26px; height: 26px; border-radius: 7px;
+  background: var(--case-rouge); transform: rotate(-8deg);
+  box-shadow: 30px -18px 0 var(--case-jaune), 30px 12px 0 var(--case-rose), 60px -4px 0 var(--case-vert),
+              90px 2px 0 var(--case-cyan), 120px 12px 0 var(--case-violet);
+}
 
 .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 16px; margin-bottom: 22px; }
 .stat {
   background: var(--card);
+  border: 1px solid var(--border);
   border-radius: var(--radius);
   box-shadow: var(--shadow);
   padding: 20px;
   display: flex;
   flex-direction: column;
-  border-left: 4px solid var(--accent);
+  position: relative;
+  overflow: hidden;
 }
-.stat-val { font-size: 28px; font-weight: 700; color: var(--primary); }
+/* Une case de la marelle dans le coin de chaque chiffre */
+.stat::after {
+  content: ''; position: absolute; top: -12px; right: -12px; width: 52px; height: 52px; border-radius: 14px;
+  background: var(--case, var(--case-violet)); transform: rotate(14deg); opacity: 0.9;
+}
+.stats .stat:nth-child(6n+1) { --case: var(--case-rouge); }
+.stats .stat:nth-child(6n+2) { --case: var(--case-jaune); }
+.stats .stat:nth-child(6n+3) { --case: var(--case-rose); }
+.stats .stat:nth-child(6n+4) { --case: var(--case-vert); }
+.stats .stat:nth-child(6n+5) { --case: var(--case-cyan); }
+.stats .stat:nth-child(6n+6) { --case: var(--case-violet); }
+.stat-val { font-family: var(--titre); font-size: 34px; font-weight: 800; line-height: 1.1; color: var(--sidebar); }
 .stat-lbl { color: var(--muted); font-size: 14px; }
 
 .empty { text-align: center; color: var(--muted); padding: 20px; font-style: italic; }
+.empty::before {
+  content: ''; display: block; width: 14px; height: 14px; border-radius: 4px; margin: 0 auto 12px; opacity: 0.75;
+  background: var(--case-jaune); transform: translateX(-10px) rotate(-6deg);
+  box-shadow: -20px 4px 0 var(--case-rouge), 20px 4px 0 var(--case-rose), 40px 0 0 var(--case-vert);
+}
 
 /* ================= FORMULAIRES ================= */
 .grid-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px 18px; }
@@ -421,16 +482,17 @@ button:disabled { opacity: 0.6; cursor: wait; }
 .field input, .field select, .field textarea, .card > select {
   padding: 10px 12px;
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: 12px;
   font-size: 14px;
   font-family: inherit;
-  background: #fff;
+  color: var(--text);
+  background: var(--champ);
 }
 .card > select { margin-bottom: 16px; min-width: 240px; }
 .field select { min-width: 0; max-width: 100%; }
 .field textarea { min-height: 100px; resize: vertical; }
-.date-fixe { padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; background: var(--bg); font-weight: 600; }
-.field input:focus, .field select:focus, .field textarea:focus { outline: 2px solid var(--primary-light); border-color: var(--primary); }
+.date-fixe { padding: 10px 12px; border: 1px solid var(--border); border-radius: 12px; background: var(--bg); font-weight: 600; }
+.field input:focus, .field select:focus, .field textarea:focus { outline: 3px solid rgba(124, 58, 237, 0.18); border-color: var(--primary); }
 .pw { display: flex; gap: 8px; }
 .pw input { flex: 1; min-width: 0; }
 .checks { display: flex; gap: 18px; flex-wrap: wrap; padding: 6px 0; }
@@ -441,9 +503,9 @@ button:disabled { opacity: 0.6; cursor: wait; }
   gap: 10px;
   padding: 10px 14px;
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: 12px;
   cursor: pointer;
-  font-weight: 500;
+  font-weight: 600;
 }
 .check:hover { background: var(--bg); }
 .check input { width: 18px; height: 18px; accent-color: var(--danger); }
@@ -453,8 +515,10 @@ button:disabled { opacity: 0.6; cursor: wait; }
 .table-wrap { overflow-x: auto; }
 table { width: 100%; border-collapse: collapse; font-size: 14px; }
 th, td { padding: 11px 12px; text-align: left; border-bottom: 1px solid var(--border); vertical-align: top; }
-thead th { background: var(--bg); font-weight: 600; color: var(--muted); font-size: 13px; text-transform: uppercase; }
-tbody tr:hover { background: #f8f5fe; }
+thead th { background: var(--doux); border-bottom: none; font-weight: 700; color: var(--muted); font-size: 12.5px; text-transform: uppercase; letter-spacing: 0.3px; }
+thead th:first-child { border-radius: 10px 0 0 10px; }
+thead th:last-child { border-radius: 0 10px 10px 0; }
+tbody tr:hover { background: #fdf8ef; }
 
 /* Emploi du temps */
 
@@ -471,7 +535,7 @@ tbody tr:hover { background: #f8f5fe; }
   gap: 14px;
   align-items: flex-start;
   padding: 14px;
-  border-radius: 10px;
+  border-radius: 14px;
   border: 1px solid var(--border);
 }
 .notifs li.cliquable { cursor: pointer; }
@@ -485,7 +549,7 @@ tbody tr:hover { background: #f8f5fe; }
 .cours-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
 .cours-card {
   border: 1px solid var(--border);
-  border-radius: 10px;
+  border-radius: 14px;
   padding: 16px;
   display: flex;
   flex-direction: column;
@@ -504,8 +568,8 @@ tbody tr:hover { background: #f8f5fe; }
   justify-content: center;
   gap: 8px;
   padding: 16px;
-  border: 2px dashed #d9c9f7;
-  border-radius: 10px;
+  border: 2px dashed #cdb5f5;
+  border-radius: 14px;
   background: var(--primary-light);
   color: var(--primary);
   font-weight: 600;
@@ -519,10 +583,10 @@ tbody tr:hover { background: #f8f5fe; }
 a.tel { color: var(--primary); text-decoration: none; white-space: nowrap; font-weight: 600; }
 
 /* ================= MESSAGES DES PARENTS (pièce jointe) ================= */
-.message-box { border: 1px solid var(--border); border-radius: 10px; background: #fff; overflow: hidden; }
+.message-box { border: 1px solid var(--border); border-radius: 12px; background: var(--champ); overflow: hidden; }
 .message-box:focus-within { border-color: var(--primary); outline: 2px solid var(--primary-light); }
 .field .message-box textarea { border: none; border-radius: 0; outline: none; width: 100%; }
-.message-outils { display: flex; align-items: center; gap: 8px; padding: 6px 10px; border-top: 1px solid var(--border); background: var(--bg); }
+.message-outils { display: flex; align-items: center; gap: 8px; padding: 6px 10px; border-top: 1px solid var(--border); background: var(--doux); }
 .outil { position: relative; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
   font-size: 20px; cursor: pointer; background: #fff; border: 1px solid var(--border); font-weight: 400 !important; }
 .outil:hover { border-color: var(--primary); background: var(--primary-light); }
@@ -752,13 +816,13 @@ input.montant { width: 90px; padding: 7px 8px; border: 1px solid var(--border); 
   .sidebar { transform: translateX(-100%); width: 82%; max-width: 300px; padding-top: calc(20px + env(safe-area-inset-top)); padding-bottom: calc(14px + env(safe-area-inset-bottom)); }
   .sidebar.open { transform: translateX(0); box-shadow: 0 0 40px rgba(0, 0, 0, 0.4); }
   .menu a { padding: 13px 12px; font-size: 15px; }
-  .overlay { display: block; position: fixed; top: 0; right: 0; bottom: 0; left: 0; background: rgba(15, 23, 42, 0.45); z-index: 15; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
+  .overlay { display: block; position: fixed; top: 0; right: 0; bottom: 0; left: 0; background: rgba(42, 22, 89, 0.45); z-index: 15; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
   .overlay.show { opacity: 1; pointer-events: auto; }
 
   .main { margin-left: 0; }
   .burger { display: block; }
   .topbar { padding: calc(10px + env(safe-area-inset-top)) 16px 10px; }
-  .topbar h2 { font-size: 18px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .topbar h2 { font-size: 20px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .user-chip span:not(.avatar) { display: none; }
   .user-chip { font-size: 0; }
   .user-chip .avatar { font-size: 15px; }
@@ -772,9 +836,9 @@ input.montant { width: 90px; padding: 7px 8px; border: 1px solid var(--border); 
     position: fixed;
     left: 0; right: 0; bottom: 0;
     z-index: 12;
-    background: var(--card);
+    background: #fffbf4;
     border-top: 1px solid var(--border);
-    box-shadow: 0 -4px 16px rgba(15, 23, 42, 0.06);
+    box-shadow: 0 -4px 16px rgba(42, 22, 89, 0.08);
     padding-bottom: env(safe-area-inset-bottom);
   }
   .tabbar a {
@@ -792,16 +856,22 @@ input.montant { width: 90px; padding: 7px 8px; border: 1px solid var(--border); 
   }
   .tab-ico { font-size: 21px; line-height: 1.2; filter: grayscale(1); opacity: 0.7; }
   .tab-lbl { max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .tabbar a.active { color: var(--accent); }
-  .tabbar a.active .tab-ico { filter: none; opacity: 1; }
+  .tabbar::before { content: ''; position: absolute; top: -1px; left: 0; right: 0; height: 3px; background: var(--marelle); }
+  .tab-ico { border-radius: 12px; padding: 1px 12px; transition: background 0.2s; }
+  .tabbar a.active { color: var(--primary); font-weight: 800; }
+  .tabbar a.active .tab-ico { filter: none; opacity: 1; background: var(--primary-light); }
 
   /* Cartes et contenus plus compacts */
   .card { padding: 16px; margin-bottom: 14px; }
-  .welcome { padding: 18px; margin-bottom: 14px; }
-  .welcome h3 { font-size: 19px; }
+  .welcome { padding: 18px 18px 52px; margin-bottom: 14px; }
+  .welcome h3 { font-size: 22px; }
+  .welcome::after { right: auto; left: 38px; top: auto; bottom: 18px; width: 18px; height: 18px; border-radius: 5px;
+    box-shadow: 21px -10px 0 var(--case-jaune), 21px 10px 0 var(--case-rose), 42px -1px 0 var(--case-vert),
+                63px 3px 0 var(--case-cyan), 84px 9px 0 var(--case-violet); }
   .stats { grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
   .stat { padding: 14px; }
-  .stat-val { font-size: 24px; }
+  .stat-val { font-size: 28px; }
+  .stat::after { width: 40px; height: 40px; border-radius: 11px; }
   .stat-lbl { font-size: 12.5px; }
   .cours-grid, .appel, .events-grid, .niveaux { grid-template-columns: 1fr; }
   .abs-ligne { flex-wrap: wrap; }
@@ -820,27 +890,35 @@ input.montant { width: 90px; padding: 7px 8px; border: 1px solid var(--border); 
 
 /* ================= ÉCOLE PRÉPARATOIRE : enfants, appel, cours du jour ================= */
 .avatar-moyen { width: 52px; height: 52px; border-radius: 50%; object-fit: cover; flex: none;
-  background: var(--primary); color: #fff; display: flex; align-items: center; justify-content: center;
+  background: var(--av, var(--primary)); color: #fff; display: flex; align-items: center; justify-content: center;
   font-size: 22px; font-weight: 700; border: 2px solid var(--primary-light); }
 .enfant-photo { width: 120px; height: 120px; border-radius: 50%; object-fit: cover; flex: none;
-  background: var(--primary); color: #fff; display: flex; align-items: center; justify-content: center;
+  background: var(--av, var(--primary)); color: #fff; display: flex; align-items: center; justify-content: center;
   font-size: 48px; font-weight: 700; border: 4px solid var(--primary-light); }
 .profil-photo[role="button"] { cursor: zoom-in; }
 .stat[role="button"] { cursor: pointer; }
 .stat[role="button"]:hover { box-shadow: 0 0 0 2px var(--primary-light), var(--shadow); }
 
+/* Avatars aux couleurs de la marelle, à tour de rôle (initiale blanche lisible : contraste ≥ 4,5) */
+:is(.enfant-puce, .enfant-carte, .eleve-carte, .appel-tuile, tbody tr):nth-child(6n+1) { --av: #7c3aed; }
+:is(.enfant-puce, .enfant-carte, .eleve-carte, .appel-tuile, tbody tr):nth-child(6n+2) { --av: #d63027; }
+:is(.enfant-puce, .enfant-carte, .eleve-carte, .appel-tuile, tbody tr):nth-child(6n+3) { --av: #b5179e; }
+:is(.enfant-puce, .enfant-carte, .eleve-carte, .appel-tuile, tbody tr):nth-child(6n+4) { --av: #237a33; }
+:is(.enfant-puce, .enfant-carte, .eleve-carte, .appel-tuile, tbody tr):nth-child(6n+5) { --av: #0e7c8c; }
+:is(.enfant-puce, .enfant-carte, .eleve-carte, .appel-tuile, tbody tr):nth-child(6n+6) { --av: #c2410c; }
+
 /* Espace Parents : une carte par enfant */
 .enfants-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; margin-bottom: 22px; }
 .enfant-carte { display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; padding: 22px 14px;
-  background: var(--card); border: 2px solid transparent; border-radius: 16px; box-shadow: var(--shadow); cursor: pointer;
+  background: var(--card); border: 2px solid var(--border); border-radius: 20px; box-shadow: var(--shadow); cursor: pointer;
   font: inherit; color: inherit; transition: 0.15s; }
 .enfant-carte:hover { border-color: var(--primary); transform: translateY(-2px); }
 .enfant-carte:focus-visible { border-color: var(--primary); transform: translateY(-2px); }
-.enfant-carte strong { font-size: 17px; margin-top: 4px; }
+.enfant-carte strong { font-family: var(--titre); font-size: 19px; font-weight: 700; line-height: 1.2; margin-top: 4px; color: var(--sidebar); }
 .enfant-resume { display: flex; flex-wrap: wrap; gap: 4px; justify-content: center; min-height: 22px; }
 .selecteur-enfants { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 6px; margin-bottom: 16px; }
 .enfant-puce { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 8px 12px; min-width: 84px;
-  background: var(--card); border: 2px solid var(--border); border-radius: 14px; cursor: pointer; font: inherit; font-size: 13px; color: var(--muted); }
+  background: var(--card); border: 2px solid var(--border); border-radius: 16px; cursor: pointer; font: inherit; font-size: 13px; font-weight: 600; color: var(--muted); }
 .enfant-puce.actif { border-color: var(--primary); color: var(--primary); font-weight: 700; background: var(--primary-light); }
 .enfant-bandeau { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
 .enfant-bandeau > div { display: flex; flex-direction: column; }
@@ -848,12 +926,12 @@ input.montant { width: 90px; padding: 7px 8px; border: 1px solid var(--border); 
 /* Élèves (administration) */
 .eleves-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 10px; }
 .eleve-carte { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border: 1px solid var(--border);
-  border-radius: 12px; cursor: pointer; transition: 0.15s; }
+  border-radius: 14px; background: var(--card); cursor: pointer; transition: 0.15s; }
 .eleve-carte:hover { border-color: var(--primary); background: var(--primary-light); }
 .eleve-carte > div { display: flex; flex-direction: column; min-width: 0; }
 .eleve-photo-champ { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
 .reponse-zone { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; align-items: flex-start; }
-.reponse-zone textarea { width: 100%; min-height: 60px; padding: 10px; border: 1px solid var(--border); border-radius: 8px; font: inherit; }
+.reponse-zone textarea { width: 100%; min-height: 60px; padding: 10px; border: 1px solid var(--border); border-radius: 12px; font: inherit; background: var(--champ); }
 
 /* Appel : une tuile par enfant, rouge si absent */
 .appel-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; margin-bottom: 12px; }
@@ -867,11 +945,11 @@ input.montant { width: 90px; padding: 7px 8px; border: 1px solid var(--border); 
 .jour-classes { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 8px; }
 
 /* Cours du jour / travail à la maison */
-.jour-titre { margin: 18px 0 10px; color: var(--primary); text-transform: capitalize; }
+.jour-titre { margin: 18px 0 10px; color: var(--primary); text-transform: capitalize; font-family: var(--titre); font-size: 18px; font-weight: 700; }
 .jour-titre:first-of-type { margin-top: 4px; }
 .jour-titre.travail { text-transform: none; }
 .pub-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; }
-.pub-carte { border: 1px solid var(--border); border-radius: 12px; padding: 14px; background: var(--card); }
+.pub-carte { border: 1px solid var(--border); border-radius: 14px; padding: 14px; background: var(--card); }
 .pub-texte { white-space: pre-line; margin: 6px 0; }
 .pub-photos { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 6px; margin-top: 8px; }
 .pub-photos img { width: 100%; aspect-ratio: 3 / 4; object-fit: cover; border-radius: 8px; border: 1px solid var(--border); cursor: zoom-in; }
@@ -902,11 +980,11 @@ input.montant { width: 90px; padding: 7px 8px; border: 1px solid var(--border); 
 
 /* Cours du jour (parents) : liste des matières, photos qu'on fait défiler du doigt */
 .matieres-liste { display: flex; flex-direction: column; gap: 8px; }
-.matiere-item { border: 1px solid var(--border); border-radius: 12px; background: var(--card); overflow: hidden; }
+.matiere-item { border: 1px solid var(--border); border-radius: 14px; background: var(--card); overflow: hidden; }
 .matiere-item.ouvert { border-color: var(--primary); }
 .matiere-tete { width: 100%; display: flex; align-items: center; gap: 10px; padding: 14px; background: none; border: 0;
   font: inherit; color: var(--text); text-align: left; cursor: pointer; }
-.matiere-tete strong { font-size: 16px; color: var(--primary); }
+.matiere-tete strong { font-family: var(--titre); font-size: 18px; font-weight: 700; color: var(--primary); }
 .matiere-chevron { margin-left: auto; font-size: 24px; color: var(--muted); transition: transform 0.2s; }
 .matiere-item.ouvert .matiere-chevron { transform: rotate(90deg); }
 .matiere-corps { padding: 0 14px 14px; }
@@ -934,8 +1012,7 @@ input.montant { width: 90px; padding: 7px 8px; border: 1px solid var(--border); 
 .onglets { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 16px; }
 .onglets button { border: 1px solid var(--border); background: var(--card); color: var(--text); padding: 10px 16px; border-radius: 999px;
   font: inherit; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
-.onglets button.actif { background: var(--primary); border-color: var(--primary); color: #fff; }
-  border-radius: 8px; font-size: 14px; display: flex; flex-direction: column; gap: 6px; }
+.onglets button.actif { background: var(--primary); border-color: var(--primary); color: #fff; box-shadow: 0 3px 0 var(--primary-dark); }
 .fiche-cantine { display: flex; flex-direction: column; gap: 4px; margin-top: 8px; }
 .menu-semaine img { display: block; width: 100%; max-width: 720px; max-height: 80vh; object-fit: contain; border-radius: 10px;
   border: 1px solid var(--border); background: var(--bg); cursor: zoom-in; margin: 6px 0 8px; }
