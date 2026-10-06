@@ -99,7 +99,31 @@ code { background: #f1f5f9; padding: 2px 6px; border-radius: 5px; font-size: 13p
 }
 /* Bande des 6 cases de la marelle en haut de la carte */
 .login-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 7px; background: var(--marelle); }
-.logo-img { width: 200px; height: 170px; margin: -4px 0 4px; object-fit: contain; animation: logo-pop 0.8s 0.2s cubic-bezier(.2, .9, .3, 1.4) both, logo-flotte 4s 1s ease-in-out infinite; }
+/* ---- Logo animé : texte + 6 cases de la marelle (positions dans marelle-cases.css, sauts dans app.js) ---- */
+.logo-marelle {
+  position: relative; width: min(250px, 80%); margin: 6px auto 12px;
+  user-select: none; -webkit-user-select: none; -webkit-tap-highlight-color: transparent; touch-action: manipulation;
+}
+.lm-texte { display: block; width: 100%; height: 100%; cursor: pointer; animation: logo-pop 0.8s 0.1s cubic-bezier(.2, .9, .3, 1.4) both; }
+.lm-case {
+  position: absolute; z-index: 1; cursor: pointer; transform-origin: 50% 90%;
+  animation: case-tombe 0.75s cubic-bezier(.3, 1.5, .5, 1) both; animation-delay: calc(0.45s + var(--i) * 0.13s);
+}
+.lm-case img { display: block; width: 100%; height: 100%; pointer-events: none; filter: drop-shadow(0 3px 3px rgba(42, 22, 89, 0.18)); }
+.case-0 { --i: 0; } .case-1 { --i: 1; } .case-2 { --i: 2; } .case-3 { --i: 3; } .case-4 { --i: 4; } .case-5 { --i: 5; }
+@keyframes case-tombe {
+  0% { opacity: 0; transform: translateY(-170%) rotate(-30deg) scale(0.5); }
+  55% { opacity: 1; transform: translateY(6%) scale(1.12, 0.84); }
+  78% { transform: translateY(-10%) rotate(3deg); }
+  100% { opacity: 1; transform: none; }
+}
+/* Le palet qui saute de case en case */
+.lm-palet {
+  position: absolute; left: 0; top: 0; z-index: 2; width: 8%; aspect-ratio: 1; border-radius: 50%; opacity: 0; pointer-events: none;
+  background: radial-gradient(circle at 35% 30%, #fff 0 10%, var(--orange-kids) 45%, #c4622a 100%);
+  box-shadow: 0 4px 6px rgba(42, 22, 89, 0.3);
+}
+.lm-confetti { position: absolute; z-index: 3; width: 9px; height: 9px; border-radius: 2px; pointer-events: none; }
 /* Le nom est déjà dans le logo : titre gardé pour les lecteurs d'écran seulement */
 .login-card h1 { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 .login-card h1 span { color: var(--accent); }
@@ -112,7 +136,8 @@ code { background: #f1f5f9; padding: 2px 6px; border-radius: 5px; font-size: 13p
   animation: flotter var(--duree, 14s) linear var(--delai, 0s) infinite;
   will-change: transform;
 }
-.fond-anime .bulle { border-radius: 50%; background: rgba(255, 255, 255, 0.12); border: 2px solid rgba(255, 255, 255, 0.18); }
+/* « Bulles » en forme de cases de la marelle */
+.fond-anime .bulle { border-radius: 26%; background: rgba(255, 255, 255, 0.12); border: 2px solid rgba(255, 255, 255, 0.18); }
 .fond-anime .bulle.c0 { background: rgba(224, 54, 44, 0.35); border-color: rgba(255, 140, 130, 0.4); }
 .fond-anime .bulle.c1 { background: rgba(255, 210, 63, 0.35); border-color: rgba(255, 230, 140, 0.45); }
 .fond-anime .bulle.c2 { background: rgba(217, 60, 207, 0.35); border-color: rgba(240, 140, 230, 0.4); }
@@ -132,7 +157,7 @@ code { background: #f1f5f9; padding: 2px 6px; border-radius: 5px; font-size: 13p
 /* Accessibilité : pas d'animation si l'utilisateur les a désactivées */
 @media (prefers-reduced-motion: reduce) {
   .fond-anime { display: none; }
-  .login-card, .logo-img { animation: none; }
+  .login-card, .lm-texte, .lm-case { animation: none; }
 }
 .login-card form { text-align: left; margin-top: 24px; }
 .login-card label { display: block; font-weight: 600; font-size: 14px; margin: 12px 0 6px; }

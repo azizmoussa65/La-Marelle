@@ -236,9 +236,9 @@ document.addEventListener('touchmove', e => { if (e.touches.length > 1) e.preven
     html += `<span style="left:${(i * 100 / objets.length + hasard(0, 5)).toFixed(1)}%;font-size:${hasard(22, 40).toFixed(0)}px;`
       + `--duree:${hasard(12, 22).toFixed(1)}s;--delai:-${hasard(0, 20).toFixed(1)}s;--derive:${hasard(-60, 60).toFixed(0)}px">${o}</span>`;
   });
-  for (let i = 0; i < 10; i++) {
-    const t = hasard(18, 70).toFixed(0);
-    html += `<span class="bulle ${i % 2 === 0 ? 'c' + (i / 2 % 6) : ''}" style="left:${hasard(0, 95).toFixed(1)}%;width:${t}px;height:${t}px;`
+  for (let i = 0; i < 14; i++) {
+    const t = hasard(18, 64).toFixed(0);
+    html += `<span class="bulle ${i < 12 ? 'c' + (i % 6) : ''}" style="left:${hasard(0, 95).toFixed(1)}%;width:${t}px;height:${t}px;`
       + `--duree:${hasard(14, 26).toFixed(1)}s;--delai:-${hasard(0, 24).toFixed(1)}s;--derive:${hasard(-40, 40).toFixed(0)}px"></span>`;
   }
   fond.innerHTML = html;
@@ -254,6 +254,127 @@ document.addEventListener('touchmove', e => { if (e.touches.length > 1) e.preven
   }, 3000);
 })();
 
+// ================= LOGO ANIMÉ : LA MARELLE =================
+// Les 6 cases du logo tombent à l'ouverture, un palet saute de case en case (1 → 6) toutes les 7 secondes,
+// une case touchée saute en jouant sa note (do ré mi sol la do) avec des confettis de sa couleur,
+// et les cases sautent quand on écrit dans le formulaire (elles tremblent si le mot de passe est faux)
+const MARELLE = {
+  couleurs: ['#e0362c', '#ffd23f', '#d93ccf', '#6fd13a', '#7fe0f0', '#9b4cf0'],
+  notes: [523.25, 587.33, 659.25, 783.99, 880, 1046.5],
+  calme: matchMedia('(prefers-reduced-motion: reduce)').matches,
+  audio: null
+};
+const casesMarelle = () => [...document.querySelectorAll('#logo-marelle .lm-case')];
+const loginVisible = () => !$('login-page').classList.contains('hidden') && !document.hidden;
+
+function noteMarelle(i) {
+  try {
+    const Audio = window.AudioContext || window.webkitAudioContext;
+    if (!Audio) return;
+    const a = MARELLE.audio = MARELLE.audio || new Audio();
+    if (a.state === 'suspended') a.resume();
+    const t = a.currentTime, o = a.createOscillator(), g = a.createGain();
+    o.type = 'triangle';
+    o.frequency.value = MARELLE.notes[i];
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(0.15, t + 0.02);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + 0.5);
+    o.connect(g).connect(a.destination);
+    o.start(t);
+    o.stop(t + 0.55);
+  } catch { /* pas de son : tant pis */ }
+}
+
+// fort = case touchée (grand saut avec un tour) ; sinon petit saut
+function sauterCase(i, fort = false) {
+  const c = casesMarelle()[i];
+  if (!c || MARELLE.calme) return;
+  c.animate(fort
+    ? [{ transform: 'none' }, { transform: 'translateY(-60%) rotate(180deg) scale(1.15)', offset: 0.45 },
+      { transform: 'translateY(0) rotate(360deg) scale(1.15, 0.8)', offset: 0.8 }, { transform: 'none' }]
+    : [{ transform: 'none' }, { transform: 'translateY(-22%) scale(1.06)', offset: 0.35 },
+      { transform: 'scale(1.12, 0.86)', offset: 0.7 }, { transform: 'none' }],
+  { duration: fort ? 700 : 420, easing: 'ease-out' });
+}
+// Case qui s'écrase un peu quand le palet tombe dessus
+function poserSurCase(i) {
+  casesMarelle()[i]?.animate([{ transform: 'none' }, { transform: 'scale(1.14, 0.82)', offset: 0.3 },
+    { transform: 'translateY(-6%)', offset: 0.65 }, { transform: 'none' }], { duration: 320, easing: 'ease-out' });
+}
+function confettisCase(i) {
+  const logo = $('logo-marelle'), c = casesMarelle()[i];
+  if (!logo || !c || MARELLE.calme) return;
+  const x = c.offsetLeft + c.offsetWidth / 2, y = c.offsetTop + c.offsetHeight / 2;
+  for (let k = 0; k < 16; k++) {
+    const p = document.createElement('span');
+    p.className = 'lm-confetti';
+    p.style.cssText = `left:${x}px;top:${y}px;background:${k % 3 ? MARELLE.couleurs[i] : MARELLE.couleurs[(i + k) % 6]}`;
+    logo.appendChild(p);
+    const angle = Math.random() * Math.PI * 2, d = 30 + Math.random() * 45;
+    p.animate([{ transform: 'translate(-50%, -50%) scale(1)', opacity: 1 },
+      { transform: `translate(${Math.cos(angle) * d}px, ${Math.sin(angle) * d - 20}px) rotate(${Math.random() * 540}deg) scale(0.4)`, opacity: 0 }],
+    { duration: 700 + Math.random() * 300, easing: 'cubic-bezier(.2, .7, .4, 1)' }).onfinish = () => p.remove();
+  }
+}
+// Toutes les cases l'une après l'autre (en jouant la gamme si avecSon)
+function vagueMarelle(avecSon = false) {
+  casesMarelle().forEach((c, i) => setTimeout(() => { sauterCase(i); if (avecSon) noteMarelle(i); }, i * 90));
+}
+function secouerMarelle() {
+  if (MARELLE.calme) return;
+  casesMarelle().forEach((c, i) => c.animate([{ transform: 'none' }, { transform: 'translateX(-12%) rotate(-8deg)' },
+    { transform: 'translateX(12%) rotate(8deg)' }, { transform: 'translateX(-8%) rotate(-4deg)' }, { transform: 'none' }],
+  { duration: 450, delay: i * 30, easing: 'ease-in-out' }));
+}
+
+// Le palet fait la marelle : il arrive de la gauche, saute sur les cases 1 à 6, puis repart à droite
+let paletEnCours = false;
+async function tourDuPalet() {
+  const palet = $('lm-palet'), cases = casesMarelle();
+  if (paletEnCours || !palet || !cases.length || MARELLE.calme || !loginVisible()) return;
+  paletEnCours = true;
+  const t = palet.offsetWidth;
+  const sur = c => ({ x: c.offsetLeft + c.offsetWidth / 2 - t / 2, y: c.offsetTop + c.offsetHeight * 0.42 - t / 2 });
+  const points = cases.map(sur);
+  const depart = { x: points[0].x - cases[0].offsetWidth * 1.3, y: points[0].y + cases[0].offsetHeight * 0.5 };
+  const fin = { x: points[5].x + cases[5].offsetWidth * 1.1, y: points[5].y + cases[5].offsetHeight * 0.6 };
+  // Saut en arc (parabole) d'un point à l'autre
+  const saut = (a, b, opaciteA, opaciteB) => palet.animate(Array.from({ length: 9 }, (_, k) => {
+    const s = k / 8, h = Math.max(28, Math.abs(b.x - a.x) * 0.9);
+    return { transform: `translate(${a.x + (b.x - a.x) * s}px, ${a.y + (b.y - a.y) * s - 4 * h * s * (1 - s)}px)`,
+      opacity: opaciteA + (opaciteB - opaciteA) * s };
+  }), { duration: 360, easing: 'linear', fill: 'forwards' }).finished;
+  try {
+    let ici = depart;
+    for (const [i, p] of points.entries()) {
+      await saut(ici, p, i ? 1 : 0, 1);
+      poserSurCase(i);
+      ici = p;
+      await new Promise(r => setTimeout(r, 120));
+    }
+    await saut(ici, fin, 1, 0);
+  } catch { /* animation annulée */ }
+  paletEnCours = false;
+}
+
+(function animerMarelle() {
+  const logo = $('logo-marelle');
+  if (!logo) return;
+  casesMarelle().forEach((c, i) => c.addEventListener('pointerdown', e => {
+    e.preventDefault();
+    noteMarelle(i);
+    sauterCase(i, true);
+    confettisCase(i);
+  }));
+  logo.querySelector('.lm-texte').addEventListener('pointerdown', e => { e.preventDefault(); vagueMarelle(true); });
+  // Chaque lettre écrite fait sauter la case suivante
+  let lettres = 0;
+  ['login-id', 'login-password'].forEach(id => $(id)?.addEventListener('input', () => sauterCase(lettres++ % 6)));
+  // Premier tour du palet après la chute des cases, puis toutes les 7 secondes
+  setTimeout(tourDuPalet, 1800);
+  setInterval(tourDuPalet, 7000);
+})();
+
 // ================= CONNEXION =================
 // Administration : email ; parents : numéro de téléphone
 async function login(e) {
@@ -265,6 +386,7 @@ async function login(e) {
   // Après 4 s sans réponse : le serveur gratuit est sans doute en train de se réveiller
   const lent = setTimeout(() => { bouton.textContent = '⏳ Réveil du serveur (jusqu\'à 1 min)…'; }, 4000);
   $('login-error').textContent = '';
+  vagueMarelle();
   try {
     const r = await api('/login', { method: 'POST', body: { identifiant: val('login-id'), password: $('login-password').value } });
     token = r.token;
@@ -272,6 +394,7 @@ async function login(e) {
     await ouvrirSession(r.user);
   } catch (err) {
     $('login-error').textContent = err.message;
+    secouerMarelle();
   } finally {
     clearTimeout(lent);
     bouton.disabled = false;

@@ -1,7 +1,8 @@
 /* Service worker : l'application fonctionne hors-ligne une fois ouverte une première fois */
-const CACHE = 'lamarelle-v2';
+const CACHE = 'lamarelle-v3';
 const FICHIERS = [
   './', './index.html', './style.css', './config.js', './app.js', './manifest.webmanifest', './img/logo.png',
+  './marelle-cases.css', './img/marelle-texte.png', ...[0, 1, 2, 3, 4, 5].map(i => `./img/case-${i}.png`),
   './icons/icon-192.png', './icons/icon-512.png', './icons/icon-maskable-512.png'
 ];
 

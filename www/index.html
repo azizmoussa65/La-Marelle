@@ -13,6 +13,7 @@
   <link rel="icon" type="image/png" href="icons/icon-192.png">
   <link rel="apple-touch-icon" href="icons/icon-192.png">
   <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="marelle-cases.css">
 </head>
 <body>
 
@@ -21,7 +22,17 @@
     <!-- Fond animé (fournitures et étoiles qui montent) : rempli par app.js -->
     <div class="fond-anime" id="fond-anime" aria-hidden="true"></div>
     <div class="login-card">
-      <img class="logo-img" src="img/logo.png" alt="Logo La Marelle">
+      <!-- Logo animé : le texte, et les 6 cases de la marelle qui sautent (touchez-les !) — animé par app.js -->
+      <div class="logo-marelle" id="logo-marelle" role="img" aria-label="Logo La Marelle Kids">
+        <img class="lm-texte" src="img/marelle-texte.png" alt="" draggable="false">
+        <span class="lm-case case-0" data-i="0"><img src="img/case-0.png" alt="" draggable="false"></span>
+        <span class="lm-case case-1" data-i="1"><img src="img/case-1.png" alt="" draggable="false"></span>
+        <span class="lm-case case-2" data-i="2"><img src="img/case-2.png" alt="" draggable="false"></span>
+        <span class="lm-case case-3" data-i="3"><img src="img/case-3.png" alt="" draggable="false"></span>
+        <span class="lm-case case-4" data-i="4"><img src="img/case-4.png" alt="" draggable="false"></span>
+        <span class="lm-case case-5" data-i="5"><img src="img/case-5.png" alt="" draggable="false"></span>
+        <span class="lm-palet" id="lm-palet" aria-hidden="true"></span>
+      </div>
       <h1>La <span>Marelle</span></h1>
       <p class="slogan" id="slogan" aria-live="polite">Bienvenue à La Marelle 👋</p>
 
