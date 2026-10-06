@@ -16,6 +16,7 @@
   --warning-light: #fef3c7;
   --bg: #f8f5fd;
   --card: #ffffff;
+  --carte-connexion: #fff7e8;  /* crème : carte de la page de connexion (contrastes des textes ≥ 5:1) */
   --text: #1f1633;
   --muted: #5f5873;
   --border: #e7e0f3;
@@ -85,7 +86,7 @@ code { background: #f1f5f9; padding: 2px 6px; border-radius: 5px; font-size: 13p
               linear-gradient(150deg, #2a1659 0%, #7c3aed 55%, #2a1659 100%);
 }
 .login-card {
-  background: var(--card);
+  background: var(--carte-connexion);
   width: 100%;
   max-width: 420px;
   padding: 30px 32px 32px;

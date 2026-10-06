@@ -115,7 +115,15 @@ console.log('Icône des notifications générée ✔');
   }
   const zone = await sharp(SOURCE).trim({ background: '#ffffff', threshold: 30 }).toBuffer({ resolveWithObject: true });
   const bx = -zone.info.trimOffsetLeft, by = -zone.info.trimOffsetTop, bw = zone.info.width, bh = zone.info.height;
-  await sharp(texte, { raw: { width: W, height: H, channels: 3 } }).extract({ left: bx, top: by, width: bw, height: bh })
+  // Fond transparent (« couleur vers alpha » depuis le blanc) : le logo se pose sur n'importe quelle couleur
+  const transparent = Buffer.alloc(N * 4);
+  for (let k = 0; k < N; k++) {
+    const c = [texte[k * 3], texte[k * 3 + 1], texte[k * 3 + 2]];
+    const a = (255 - Math.min(...c)) / 255;
+    for (let j = 0; j < 3; j++) transparent[k * 4 + j] = a ? Math.round((c[j] - (1 - a) * 255) / a) : 0;
+    transparent[k * 4 + 3] = Math.round(a * 255);
+  }
+  await sharp(transparent, { raw: { width: W, height: H, channels: 4 } }).extract({ left: bx, top: by, width: bw, height: bh })
     .resize(Math.round(bw * 0.6)).png({ compressionLevel: 9 }).toFile('www/img/marelle-texte.png');
 
   // Une image par case, fond transparent (couleur « dé-mélangée » du blanc sur les bords)
