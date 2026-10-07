@@ -64,6 +64,11 @@ const SQL = {
                    r.piece_id::text AS "pieceId", f.type AS "pieceType", f.nom AS "pieceNom"
                  FROM reclamations r JOIN users pu ON pu.id = r.parent_id
                  LEFT JOIN eleves e ON e.id = r.eleve_id LEFT JOIN fichiers f ON f.id = r.piece_id`,
+  notesEleves: `SELECT n.id::text AS id, n.eleve_id::text AS "eleveId", e.nom AS "eleveNom", e.classe AS "eleveClasse",
+                  n.type, n.sujet, n.message, n.piece_id::text AS "pieceId", f.type AS "pieceType", f.nom AS "pieceNom",
+                  u.nom AS "creePar", ${DATE_FR('n.created_at')} AS date
+                FROM notes_eleves n JOIN eleves e ON e.id = n.eleve_id
+                LEFT JOIN fichiers f ON f.id = n.piece_id LEFT JOIN users u ON u.id = n.cree_par`,
   cantineReservations: `SELECT c.eleve_id::text AS "eleveId", c.jour, u.nom AS "parentNom", u.telephone AS "parentTel",
                           ${DATE_FR('c.created_at')} AS "reserveLe"
                         FROM cantine_reservations c LEFT JOIN users u ON u.id = c.parent_id`,
@@ -167,6 +172,7 @@ async function nettoyerFichiers() {
     AND NOT EXISTS (SELECT 1 FROM users u WHERE u.photo_id = f.id)
     AND NOT EXISTS (SELECT 1 FROM eleves el WHERE el.photo_id = f.id)
     AND NOT EXISTS (SELECT 1 FROM reclamations r WHERE r.piece_id = f.id)
+    AND NOT EXISTS (SELECT 1 FROM notes_eleves ne WHERE ne.piece_id = f.id)
     AND NOT EXISTS (SELECT 1 FROM cantine_semaines m WHERE m.photo_id = f.id)
     AND NOT EXISTS (SELECT 1 FROM emplois em WHERE em.photo_id = f.id)`);
 }
@@ -282,22 +288,23 @@ app.get('/api/data', auth, async (req, res) => {
   if (u.role === 'parent') {
     const enfants = await q(`${SQL.eleves} WHERE ${MES_ENFANTS} ORDER BY date_naissance NULLS LAST, nom`, [u.telCle]);
     const ids = enfants.map(e => Number(e.id)), cls = [...new Set(enfants.map(e => e.classe))];
-    const [emplois, absences, publications, reclamations, cantineReservations, cantineMenus, n, c, ev] = await Promise.all([
+    const [emplois, absences, publications, reclamations, notesEleves, cantineReservations, cantineMenus, n, c, ev] = await Promise.all([
       q(`${SQL.emplois} WHERE em.classe = ANY($1)`, [cls]),
       q(`${SQL.absences} WHERE a.eleve_id = ANY($1::int[]) ORDER BY a.date DESC LIMIT 500`, [ids]),
       q(`${SQL.publications} WHERE p.classe = ANY($1) ORDER BY p.date DESC, p.id DESC LIMIT 300`, [cls]),
       q(`${SQL.reclamations} WHERE r.parent_id = $1 ORDER BY r.created_at DESC`, [u.id]),
+      q(`${SQL.notesEleves} WHERE n.eleve_id = ANY($1::int[]) ORDER BY n.created_at DESC LIMIT 200`, [ids]),
       q(`${SQL.cantineReservations} WHERE c.eleve_id = ANY($1::int[]) AND c.jour >= ${AUJOURDHUI} - 7 ORDER BY c.jour`, [ids]),
       q(`${SQL.cantineMenus}`),
       notifications, classes, evenements
     ]);
-    return res.json({ enfants, emplois, absences, publications, reclamations, cantineReservations, cantineMenus,
+    return res.json({ enfants, emplois, absences, publications, reclamations, notesEleves, cantineReservations, cantineMenus,
       notifications: n,
       classes: c.filter(x => cls.includes(x.nom)), evenements: ev, ...constantes });
   }
 
   // Administration : toute l'école
-  const [users, parents, eleves, emplois, absences, publications, reclamations,
+  const [users, parents, eleves, emplois, absences, publications, reclamations, notesEleves,
     cantineReservations, cantineMenus, n, c, ev] = await Promise.all([
     q(`${SQL.users} WHERE role <> 'parent' ORDER BY nom`),
     q(`${SQL.parents} ORDER BY u.nom`),
@@ -306,11 +313,12 @@ app.get('/api/data', auth, async (req, res) => {
     q(`${SQL.absences} WHERE a.date >= CURRENT_DATE - 120 ORDER BY a.date DESC, a.id DESC LIMIT 3000`),
     q(`${SQL.publications} ORDER BY p.date DESC, p.id DESC LIMIT 300`),
     q(`${SQL.reclamations} ORDER BY r.created_at DESC LIMIT 300`),
+    q(`${SQL.notesEleves} ORDER BY n.created_at DESC LIMIT 300`),
     q(`${SQL.cantineReservations} WHERE c.jour >= ${AUJOURDHUI} - 7 ORDER BY c.jour LIMIT 5000`),
     q(`${SQL.cantineMenus}`),
     notifications, classes, evenements
   ]);
-  res.json({ users, parents, eleves, emplois, absences, publications, reclamations,
+  res.json({ users, parents, eleves, emplois, absences, publications, reclamations, notesEleves,
     cantineReservations, cantineMenus, notifications: n, classes: c, evenements: ev, ...constantes });
 });
 
@@ -666,6 +674,28 @@ app.patch('/api/reclamations/:id/traiter', auth, equipe, async (req, res) => {
   await notifier(r.parent_id, 'reclamation', reponse
     ? `✉️ Réponse de l'administration à « ${r.sujet} » : ${reponse.slice(0, 120)}`
     : `✔ Votre message « ${r.sujet} » a été traité par l'administration.`);
+  res.json({ ok: true });
+});
+
+// ================= NOTES DE L'ÉCOLE : administration → parents d'un élève =================
+// Note sur un élève (comportement, santé, félicitations…), avec pièce jointe optionnelle : seuls ses parents la reçoivent
+app.post('/api/notes-eleves', auth, equipe, televerser, async (req, res) => {
+  const [eleve] = await q('SELECT id, nom, classe FROM eleves WHERE id = $1', [entier(req.body.eleveId)]);
+  exiger(eleve, 'Élève introuvable', 404);
+  const type = texte(req.body.type, 'Type').slice(0, 60), sujet = texte(req.body.sujet, 'Sujet').slice(0, 200);
+  const message = texte(req.body.message, 'Message').slice(0, 2000);
+  const pieceId = await enregistrerFichier(req.file);
+  await q('INSERT INTO notes_eleves (eleve_id, type, sujet, message, piece_id, cree_par) VALUES ($1,$2,$3,$4,$5,$6)',
+    [eleve.id, type, sujet, message, pieceId, req.user.id]);
+  const parents = await parentsDesEleves([eleve.id]);
+  await notifier(parents, 'note', `📒 ${type} — ${eleve.nom} : « ${sujet} »${pieceId ? ' 📎' : ''}`);
+  res.status(201).json({ ok: true, parents: parents.length });
+});
+
+app.delete('/api/notes-eleves/:id', auth, equipe, async (req, res) => {
+  const [n] = await q('DELETE FROM notes_eleves WHERE id = $1 RETURNING id', [entier(req.params.id)]);
+  exiger(n, 'Note introuvable', 404);
+  await nettoyerFichiers();
   res.json({ ok: true });
 });
 

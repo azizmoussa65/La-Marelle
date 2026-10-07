@@ -128,6 +128,9 @@ Pour l'App Store : compte Apple Developer (99 $/an) et un serveur en **HTTPS** (
 - **Événements** : publiés par l'administration → notification aux parents et à l'équipe.
 - **Réclamations** : le parent écrit (enfant concerné, type, pièce jointe 📷 / 📎) à l'administration,
   qui répond ; la réponse arrive dans l'Espace Parents avec une notification.
+- **Notes aux parents** (administration, page « Réclamations », onglet *Notes aux parents*, ou « 📒 Note aux parents »
+  sur la fiche d'un élève) : type (comportement, santé, félicitations…), sujet, message, pièce jointe 📷 / 📎 → envoyée
+  **seulement** aux parents de cet élève (père et mère), avec une notification ; ils la voient dans « Messages de l'école ».
 - **Classes** : Classe A, Classe B, Classe C (ajout / suppression), liste PDF imprimable.
 - **Administrateurs** : chaque administrateur peut ajouter, modifier ou supprimer les autres comptes (jamais le sien).
 - Les anciens comptes « Direction » sont devenus des comptes Administration (même email, même mot de passe).
@@ -160,6 +163,7 @@ Pour l'App Store : compte Apple Developer (99 $/an) et un serveur en **HTTPS** (
 | POST/PATCH/DELETE | `/api/users` (administrateurs) | administration |
 | POST | `/api/reclamations` (formulaire + pièce jointe) | parent |
 | PATCH | `/api/reclamations/:id/traiter` (réponse optionnelle) | administration |
+| POST/DELETE | `/api/notes-eleves` (note sur un élève + pièce jointe) → ses parents | administration |
 | PUT | `/api/cantine/reservations` (jours de cantine d'un enfant, semaine du menu) | parent |
 | POST/DELETE | `/api/cantine/menus` (photo du menu, remplace l'ancien) → tous les parents | administration |
 | GET | `/api/fichiers/:id` | lien non devinable (UUID) |

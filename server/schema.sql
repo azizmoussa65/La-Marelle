@@ -115,6 +115,19 @@ CREATE TABLE IF NOT EXISTS evenements (
 );
 
 -- Messages des parents (réclamation, certificat médical…) → administration
+-- Note de l'administration sur un élève (comportement, santé, félicitations…), envoyée seulement à ses parents
+CREATE TABLE IF NOT EXISTS notes_eleves (
+  id          SERIAL PRIMARY KEY,
+  eleve_id    INTEGER NOT NULL REFERENCES eleves(id) ON DELETE CASCADE,
+  type        TEXT NOT NULL,
+  sujet       TEXT NOT NULL,
+  message     TEXT NOT NULL,
+  piece_id    UUID REFERENCES fichiers(id) ON DELETE SET NULL,
+  cree_par    INTEGER REFERENCES users(id) ON DELETE SET NULL,
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS idx_notes_eleves ON notes_eleves(eleve_id, created_at DESC);
+
 CREATE TABLE IF NOT EXISTS reclamations (
   id            SERIAL PRIMARY KEY,
   parent_id     INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,

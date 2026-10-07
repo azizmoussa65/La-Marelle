@@ -20,7 +20,7 @@ function ouvertureAppel(creneau) {
 }
 const heureTunis = () => new Date().toLocaleTimeString('en-GB', { timeZone: 'Africa/Tunis', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' });
 const ROLES = { admin: 'Administration', parent: 'Parents' };
-const ICONES = { absence: '📋', reclamation: '📩', emploi: '🗓️', evenement: '🎉', cours: '📚', travail: '📝', enfant: '🧒', cantine: '🍽️' };
+const ICONES = { absence: '📋', reclamation: '📩', emploi: '🗓️', evenement: '🎉', cours: '📚', travail: '📝', enfant: '🧒', cantine: '🍽️', note: '📒' };
 const PUBLICATIONS = {
   cours: { titre: 'Cours du jour', icone: '📚', vide: 'Aucun cours envoyé.' },
   travail: { titre: 'Travail à la maison', icone: '📝', vide: 'Aucun travail à la maison.' }
@@ -32,7 +32,7 @@ const MAX_PHOTOS = 8;
 // ================= ÉTAT =================
 const VIDE = { users: [], parents: [], eleves: [], enfants: [], emplois: [], absences: [], publications: [],
   reclamations: [], notifications: [], evenements: [], classes: [],
-  cantineReservations: [], cantineMenus: [] };
+  notesEleves: [], cantineReservations: [], cantineMenus: [] };
 let DB = { ...VIDE };     // copie locale des données reçues du serveur
 let user = null;          // utilisateur connecté
 let token = null;         // jeton de session
@@ -174,8 +174,8 @@ async function lireNotifsOuvertes() {
 // Page ouverte quand on touche une notification (dans la liste ou dans la barre du téléphone)
 const PAGE_NOTIF = {
   parent: { cantine: 'cantineParent', absence: 'absencesParent', cours: 'coursParent', travail: 'travailParent',
-    emploi: 'emploiParent', evenement: 'evenements', reclamation: 'messages', enfant: 'dashboard' },
-  admin: { cantine: 'cantine', absence: 'appel', reclamation: 'reclamations', evenement: 'evenements', cours: 'cours', travail: 'travail' }
+    emploi: 'emploiParent', evenement: 'evenements', reclamation: 'messages', note: 'messages', enfant: 'dashboard' },
+  admin: { cantine: 'cantine', absence: 'appel', reclamation: 'reclamations', note: 'reclamations', evenement: 'evenements', cours: 'cours', travail: 'travail' }
 };
 function ouvrirDepuisNotif(type, texte = '') {
   const page = user && (PAGE_NOTIF[user.role] || {})[type];
@@ -1082,6 +1082,7 @@ function carteEditionEleve() {
       <div class="field full profil-boutons">
         <button class="btn btn-primary">💾 Enregistrer</button>
         <button type="button" class="btn btn-light" onclick="eleveEdite=null;rafraichir()">Annuler</button>
+        <button type="button" class="btn btn-light" onclick="eleveEdite=null;noteAuxParents('${e.id}')">📒 Note aux parents</button>
         <button type="button" class="btn btn-danger" onclick="supprimerEleve('${e.id}')">Supprimer l'élève</button>
       </div>
     </form>
@@ -1542,14 +1543,14 @@ function afficherPiece(zone) {
     <button type="button" class="btn btn-light btn-sm" onclick="retirerPiece('${zone}')">✕</button></div>`;
 }
 // Zone de message avec 📷 (appareil photo) et 📎 (fichier)
-function boiteMessage(idTexte, zone, placeholder) {
+function boiteMessage(idTexte, zone, placeholder, aide = "Photo d'un certificat ou PDF (5 Mo max)") {
   delete pieces[zone];
   return `<div class="message-box">
     <textarea id="${idTexte}" required maxlength="2000" placeholder="${placeholder}"></textarea>
     <div class="message-outils">
       <label class="outil" title="Prendre une photo (certificat…)">📷<input type="file" accept="image/*" capture="environment" onchange="choisirPiece(this,'${zone}')"></label>
       <label class="outil" title="Joindre une photo ou un PDF">📎<input type="file" accept="${FORMATS_FICHIER}" onchange="choisirPiece(this,'${zone}')"></label>
-      <span class="small muted">Photo d'un certificat ou PDF (5 Mo max)</span>
+      <span class="small muted">${aide}</span>
     </div>
     <div id="${zone}"></div>
   </div>`;
@@ -1575,6 +1576,51 @@ function traiterReclamation(rid) {
   action(api(`/reclamations/${rid}/traiter`, { method: 'PATCH', body: { reponse: reponse.trim() } }),
     reponse.trim() ? 'Réponse envoyée au parent ✔' : 'Marquée comme traitée ✔');
 }
+// ----- Notes de l'école : l'administration écrit sur un élève, seuls ses parents la reçoivent -----
+const TYPES_NOTE = ['Comportement', 'Santé', 'Travail en classe', 'Félicitations 🎉', 'Information', 'Autre'];
+const reclam = { onglet: 'messages', eleve: '' };
+function badgeNote(type) {
+  const c = /félicit/i.test(type) ? 'badge-ok' : /comport|santé/i.test(type) ? 'badge-wait' : 'badge-blue';
+  return `<span class="badge ${c}">${esc(type)}</span>`;
+}
+// Élèves rangés par classe (une liste par classe)
+function optionsElevesParClasse(selection = '') {
+  return DB.classes.map(c => {
+    const liste = DB.eleves.filter(e => e.classe === c.nom).sort(parNom);
+    return liste.length ? `<optgroup label="${esc(c.nom)}">${options(liste.map(e => [e.id, e.nom]), selection)}</optgroup>` : '';
+  }).join('');
+}
+async function envoyerNoteEleve(e) {
+  e.preventDefault();
+  const form = new FormData(), p = pieces['ne-piece'];
+  for (const [cle, id] of [['eleveId', 'ne-eleve'], ['type', 'ne-type'], ['sujet', 'ne-sujet'], ['message', 'ne-message']])
+    form.append(cle, val(id));
+  if (p) form.append('fichier', p, p.name);
+  const r = await envoyerFormulaire(e, '/notes-eleves', form);
+  if (!r) return;
+  delete pieces['ne-piece'];
+  reclam.eleve = '';
+  rafraichir();
+  toast(r.parents ? `✔ Note envoyée aux parents (${r.parents} compte(s))` : "Note enregistrée, mais cet élève n'a pas encore de compte parent", r.parents ? 'ok' : 'err');
+}
+function supprimerNoteEleve(id) {
+  if (!confirm('Supprimer cette note ? Les parents ne la verront plus.')) return;
+  action(api('/notes-eleves/' + id, { method: 'DELETE' }), 'Note supprimée');
+}
+// Raccourci depuis la fiche d'un élève : onglet « Notes aux parents » avec l'élève déjà choisi
+function noteAuxParents(eleveId) { reclam.onglet = 'notes'; reclam.eleve = eleveId; go('reclamations'); }
+function carteNote(n, gestion) {
+  return `<div class="item note-ecole">
+      <div class="item-head"><strong>${esc(n.sujet)}</strong>${badgeNote(n.type)}</div>
+      <p class="small muted">${gestion ? 'Pour les parents de' : 'Concernant'} <b>${esc(n.eleveNom)}</b> (${esc(n.eleveClasse)})</p>
+      <p class="pub-texte">${esc(n.message)}</p>
+      ${lienPiece(n)}
+      <p class="small muted">${gestion ? 'Envoyée' : 'Reçue'} le ${esc(n.date)}${n.creePar ? ` · ${esc(n.creePar)}` : ''}</p>
+      ${gestion ? `<button class="btn btn-light btn-sm" onclick="supprimerNoteEleve('${n.id}')">Supprimer</button>` : ''}
+    </div>`;
+}
+function changerReclam(cle, v) { reclam[cle] = v; rafraichir(); }
+
 function badgeStatut(s) { return `<span class="badge ${s === 'Traitée' ? 'badge-ok' : 'badge-wait'}">${esc(s)}</span>`; }
 
 // ================= MON PROFIL (tous les rôles) =================
@@ -2002,9 +2048,11 @@ const VUES = {
 
   // ----- Réclamations : côté parent -----
   messages() {
-    const recs = DB.reclamations;
+    const recs = DB.reclamations, notes = DB.notesEleves;
     const e = enfant();
-    return carte('✉️ Envoyer un message à l\'école', `
+    return carte(`📒 Messages de l'école (${notes.length})`, notes.length ? notes.map(n => carteNote(n, false)).join('')
+        : vide("Aucun message de l'école pour le moment."))
+      + carte('✉️ Envoyer un message à l\'école', `
         <form class="grid-form" onsubmit="envoyerReclamation(event)">
           <div class="field"><label>Enfant concerné</label><select id="rc-enfant">
             ${options([...DB.enfants.map(x => [x.id, `${x.nom} (${x.classe})`]), ['', 'Message général']], e ? e.id : '')}</select></div>
@@ -2028,7 +2076,26 @@ const VUES = {
   reclamations() {
     const liste = DB.reclamations;
     const attente = liste.filter(r => r.statut !== 'Traitée').length;
-    return carte(`📩 Messages des parents (${liste.length}) ${attente ? `<span class="badge badge-wait">${attente} en attente</span>` : ''}`, liste.length ? liste.map(r => `
+    const onglets = [['messages', `📩 Messages des parents ${attente ? `<span class="badge badge-wait">${attente}</span>` : ''}`],
+      ['notes', `📒 Notes aux parents <span class="badge badge-blue">${DB.notesEleves.length}</span>`]];
+    const barre = `<div class="onglets" role="tablist">${onglets.map(([k, t]) => `<button role="tab" aria-selected="${reclam.onglet === k}"
+      class="${reclam.onglet === k ? 'actif' : ''}" onclick="changerReclam('onglet','${k}')">${t}</button>`).join('')}</div>`;
+    if (reclam.onglet === 'notes') {
+      return barre + carte("📒 Envoyer une note aux parents d'un élève", DB.eleves.length ? `
+        <p class="muted" style="margin-bottom:14px">Comportement, santé, félicitations… La note arrive <b>seulement</b> chez les parents
+          de l'élève choisi (compte du père et de la mère), avec une notification sur leur téléphone.</p>
+        <form class="grid-form" onsubmit="envoyerNoteEleve(event)">
+          <div class="field"><label for="ne-eleve">Élève</label><select id="ne-eleve" required>
+            <option value="">— Choisir un élève —</option>${optionsElevesParClasse(reclam.eleve)}</select></div>
+          <div class="field"><label for="ne-type">Type</label><select id="ne-type">${options(TYPES_NOTE)}</select></div>
+          <div class="field full"><label for="ne-sujet">Sujet</label><input id="ne-sujet" required maxlength="200" placeholder="Ex : Très bonne participation aujourd'hui"></div>
+          <div class="field full"><label>Message</label>${boiteMessage('ne-message', 'ne-piece', 'Écrivez la note pour les parents…', 'Photo ou PDF (5 Mo max)')}</div>
+          <div class="field full"><button class="btn btn-primary">📒 Envoyer aux parents</button></div>
+        </form>` : vide('Aucun élève. Ajoutez-en dans « Élèves ».'))
+        + carte(`Notes envoyées (${DB.notesEleves.length})`, DB.notesEleves.length
+          ? DB.notesEleves.map(n => carteNote(n, true)).join('') : vide('Aucune note envoyée.'));
+    }
+    return barre + carte(`📩 Messages des parents (${liste.length}) ${attente ? `<span class="badge badge-wait">${attente} en attente</span>` : ''}`, liste.length ? liste.map(r => `
       <div class="item ${r.statut !== 'Traitée' ? 'convocation a-confirmer' : ''}">
         <div class="item-head"><strong>${esc(r.type)} — ${esc(r.sujet)}</strong>${badgeStatut(r.statut)}</div>
         <p class="small muted">De <b>${esc(r.parentNom)}</b> ${lienTel(r.parentTel)}${r.eleveNom ? ` · ${esc(r.eleveNom)} (${esc(r.eleveClasse)})` : ''}</p>

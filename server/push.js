@@ -40,7 +40,7 @@ export async function desabonner(userId, cle) {
 
 const TITRES = {
   absence: 'Absence', evenement: 'Événement', reclamation: 'Messages', emploi: 'Emploi du temps',
-  cours: 'Cours du jour', travail: 'Travail à la maison', enfant: 'Mes enfants', cantine: 'Cantine'
+  cours: 'Cours du jour', travail: 'Travail à la maison', enfant: 'Mes enfants', cantine: 'Cantine', note: "Message de l'école"
 };
 
 // « pour » = liste d'identifiants d'utilisateurs et / ou de rôles (parent, admin)
