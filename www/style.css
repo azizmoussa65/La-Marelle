@@ -1038,7 +1038,6 @@ input.montant { width: 90px; padding: 7px 8px; border: 1px solid var(--border); 
 .cantine-jour:nth-child(6n+6) { --case: var(--case-violet); }
 .cantine-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 14px; }
 .cantine-actions > span { flex: 1; min-width: 160px; }
-.jours-ouverts .check input { accent-color: var(--primary); }
 .menu-semaine img { display: block; width: 100%; max-width: 720px; max-height: 80vh; object-fit: contain; border-radius: 10px;
   border: 1px solid var(--border); background: var(--bg); cursor: zoom-in; margin: 6px 0 8px; }
 .menu-attente { width: 140px; height: 170px; }

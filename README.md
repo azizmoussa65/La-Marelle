@@ -112,8 +112,9 @@ Pour l'App Store : compte Apple Developer (99 $/an) et un serveur en **HTTPS** (
 
 ### Cantine scolaire
 - **Administration** (page « Cantine », 2 onglets) :
-  - *Menu de la semaine* : photo (ou PDF) du menu, **semaine** (son lundi) et **jours de cantine** (lundi → vendredi
-    par défaut, samedi possible) → envoyé tout de suite à tous les parents avec une notification.
+  - *Menu de la semaine* : seulement la photo (ou le PDF) du menu → envoyée tout de suite à tous les parents avec une
+    notification. Elle vaut pour la semaine en cours, du lundi au vendredi (pour la semaine suivante si elle est envoyée
+    du vendredi au dimanche).
     Un nouveau menu **remplace automatiquement** l'ancien.
   - *Réservations* : les repas réservés, **jour par jour** (enfant, classe, parent qui a choisi), filtre par classe.
     Le tableau de bord affiche le nombre de repas du jour.
@@ -160,5 +161,5 @@ Pour l'App Store : compte Apple Developer (99 $/an) et un serveur en **HTTPS** (
 | POST | `/api/reclamations` (formulaire + pièce jointe) | parent |
 | PATCH | `/api/reclamations/:id/traiter` (réponse optionnelle) | administration |
 | PUT | `/api/cantine/reservations` (jours de cantine d'un enfant, semaine du menu) | parent |
-| POST/DELETE | `/api/cantine/menus` (photo, semaine, jours ; remplace l'ancien) → tous les parents | administration |
+| POST/DELETE | `/api/cantine/menus` (photo du menu, remplace l'ancien) → tous les parents | administration |
 | GET | `/api/fichiers/:id` | lien non devinable (UUID) |

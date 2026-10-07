@@ -1575,7 +1575,7 @@ function voirMdp(bouton) {
 }
 
 // ================= CANTINE SCOLAIRE =================
-// L'administration envoie le menu de la semaine en photo, avec la semaine et les jours d'ouverture (le nouveau remplace l'ancien).
+// L'administration envoie seulement la photo du menu de la semaine (le nouveau remplace l'ancien).
 // Le parent choisit alors, enfant par enfant, les jours où il mange à la cantine (modifiables jusqu'à la veille) ;
 // l'administration voit les repas réservés, jour par jour.
 const cantine = { onglet: 'menu', filtreClasse: '' };
@@ -1674,12 +1674,8 @@ function vueCantineParent() {
 
 function changerCantine(cle, v) { cantine[cle] = v; rafraichir(); }
 
-// ----- Administration : menu de la semaine (photo + semaine + jours d'ouverture), envoyé à tous les parents -----
-// Semaine proposée : la semaine en cours, ou la suivante à partir du vendredi
-function lundiParDefaut() {
-  const auj = aujourdhui(), n = numeroJour(auj);
-  return plusJours(auj, n >= 5 ? 8 - n : 1 - n);
-}
+// ----- Administration : photo du menu de la semaine, envoyée à tous les parents -----
+// (semaine en cours, ou la suivante si le menu est envoyé du vendredi au dimanche : calculée par le serveur)
 async function choisirPhotoMenu(input) {
   const f = input.files[0];
   input.value = '';
@@ -1701,13 +1697,8 @@ function afficherPhotoMenu() {
 async function envoyerMenu(e) {
   e.preventDefault();
   if (!photoMenu) return toast('Prenez ou choisissez la photo du menu', 'err');
-  const jours = [...document.querySelectorAll('input[name="cm-jour"]:checked')].map(c => c.value);
-  if (!val('cm-lundi')) return toast('Choisissez la semaine du menu', 'err');
-  if (!jours.length) return toast('Cochez au moins un jour de cantine', 'err');
   const form = new FormData();
   form.append('fichier', photoMenu, photoMenu.name);
-  form.append('lundi', val('cm-lundi'));
-  form.append('jours', jours.join(','));
   const r = await envoyerFormulaire(e, '/cantine/menus', form);
   if (!r) return;
   photoMenu = null;
@@ -1721,15 +1712,10 @@ function supprimerMenu() {
 function ongletMenu() {
   const menu = menuActuel();
   return carte('📅 Envoyer le menu de la semaine', `
-      <p class="muted" style="margin-bottom:14px">Prenez en photo le menu de la semaine (ou choisissez une photo / un PDF), indiquez la semaine
-        et les jours de cantine : tous les parents le reçoivent avec une notification et choisissent les jours de leur enfant.
+      <p class="muted" style="margin-bottom:14px">Prenez en photo le menu de la semaine (ou choisissez une photo / un PDF) :
+        tous les parents le reçoivent avec une notification et choisissent eux-mêmes les jours de cantine de leur enfant.
         ${menu ? 'Le nouveau menu <b>remplace</b> automatiquement l\'ancien.' : ''}</p>
       <form class="grid-form" onsubmit="envoyerMenu(event)">
-        <div class="field"><label for="cm-lundi">Semaine du <span class="muted small">(lundi)</span></label>
-          <input type="date" id="cm-lundi" required value="${lundiParDefaut()}"></div>
-        <div class="field full"><label>Jours de cantine</label>
-          <div class="checks jours-ouverts">${[1, 2, 3, 4, 5, 6].map(n => `<label class="check">
-            <input type="checkbox" name="cm-jour" value="${n}" ${n <= 5 ? 'checked' : ''}> ${JOURS_CANTINE[n]}</label>`).join('')}</div></div>
         <div class="field full"><label>Photo du menu</label>
           <div class="profil-boutons">
             <label class="btn btn-primary upload-btn">📷 Prendre une photo

@@ -618,17 +618,15 @@ app.put('/api/cantine/reservations', auth, seul('parent'), async (req, res) => {
 });
 
 // ----- Menu de la semaine : une seule photo (ou un PDF) ; la nouvelle remplace l'ancienne -----
-// Avec la semaine (n'importe quel jour → son lundi) et les jours d'ouverture (1 = lundi … 6 = samedi)
+// L'administration n'envoie que la photo : le menu vaut pour la semaine en cours (du lundi au vendredi),
+// ou pour la semaine suivante s'il est envoyé du vendredi au dimanche. Les parents choisissent ensuite les jours.
 app.post('/api/cantine/menus', auth, equipe, televerser, async (req, res) => {
   exiger(req.file, 'Prenez ou choisissez la photo du menu');
-  const semaine = String(req.body.lundi || '');
-  exiger(/^\d{4}-\d{2}-\d{2}$/.test(semaine) && !isNaN(new Date(semaine)), 'Choisissez la semaine du menu');
-  const jours = [...new Set(String(req.body.jours || '').split(',').map(Number))].filter(n => n >= 1 && n <= 6).sort();
-  exiger(jours.length, 'Choisissez au moins un jour de cantine');
   const photoId = await enregistrerFichier(req.file);
   await q('DELETE FROM cantine_semaines');   // l'ancien menu est supprimé automatiquement
-  const [m] = await q(`INSERT INTO cantine_semaines (photo_id, cree_par, lundi, jours)
-    VALUES ($1, $2, date_trunc('week', $3::date)::date, $4::smallint[]) RETURNING lundi::text`, [photoId, req.user.id, semaine, jours]);
+  const [m] = await q(`INSERT INTO cantine_semaines (photo_id, cree_par, lundi)
+    VALUES ($1, $2, date_trunc('week', ${AUJOURDHUI})::date + CASE WHEN extract(isodow FROM ${AUJOURDHUI}) >= 5 THEN 7 ELSE 0 END)
+    RETURNING lundi::text`, [photoId, req.user.id]);
   await nettoyerFichiers();
   const [{ n }] = await q("SELECT count(*)::int AS n FROM users WHERE role = 'parent'");
   await notifier('parent', 'cantine',
