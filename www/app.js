@@ -531,6 +531,7 @@ function go(page) {
   $('page-title').textContent = item[2];
   document.querySelectorAll('#menu a, #tabbar a').forEach(a => a.classList.toggle('active', a.dataset.page === page));
   $('content').innerHTML = VUES[page]();
+  majSidebarEvenement();
   majCloche();
   toggleSidebar(false);
   window.scrollTo(0, 0);
@@ -1489,6 +1490,16 @@ function majComptesARebours() {
   });
 }
 setInterval(majComptesARebours, 1000);
+// Menu latéral : le prochain événement, avec son compte à rebours ; un appui ouvre la page « Événements »
+function majSidebarEvenement() {
+  const z = $('sidebar-evenement'), ev = evenementsAVenir()[0];
+  if (!z) return;
+  z.innerHTML = ev ? `<button type="button" class="sb-evenement" onclick="go('evenements')">
+      <span class="sb-ev-titre">🎉 Prochain événement · ${joursAvant(ev.date)}</span>
+      <strong>${esc(ev.nom)}</strong>
+      <span class="sb-ev-date">${esc(dateCourte(ev.date))} · ${esc(ev.heure)}</span>
+      ${compteARebours(ev)}</button>` : '';
+}
 
 function carteEvenement(ev, gestion) {
   const passe = ev.date < aujourdhui();

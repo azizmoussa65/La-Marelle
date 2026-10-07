@@ -345,6 +345,21 @@ button:disabled { opacity: 0.6; cursor: wait; }
 .menu a:hover > span:first-child { transform: rotate(0) scale(1.08); }
 .menu a.active { background: var(--carte-connexion); color: var(--sidebar); font-weight: 800; }
 .menu a.active > span:first-child { transform: rotate(0); }
+/* Prochain événement dans le menu latéral : compte à rebours en petites cases */
+.sb-evenement {
+  display: flex; flex-direction: column; align-items: flex-start; gap: 2px; width: 100%; margin-top: 12px; padding: 10px 10px 8px;
+  background: rgba(255, 247, 232, 0.08); border: 1px dashed rgba(255, 247, 232, 0.3); border-radius: 14px;
+  color: var(--ivoire); font: inherit; text-align: left; cursor: pointer; transition: background 0.2s;
+}
+.sb-evenement:hover { background: rgba(255, 247, 232, 0.14); }
+.sb-ev-titre { font-size: 11px; font-weight: 800; letter-spacing: 0.3px; text-transform: uppercase; color: var(--case-jaune); }
+.sb-evenement strong { font-family: var(--titre); font-size: 16px; line-height: 1.2; }
+.sb-ev-date { font-size: 12px; opacity: 0.8; }
+.sb-evenement .compte-rebours { gap: 5px; margin: 6px 0 0; }
+.sb-evenement .cr-case { padding: 4px 1px 3px; border-radius: 9px; }
+.sb-evenement .cr-val { font-size: 17px; }
+.sb-evenement .cr-case span { font-size: 9px; }
+.sb-evenement .cr-fini { font-size: 16px; color: var(--case-jaune); }
 .btn-logout { background: rgba(255, 247, 232, 0.08); color: var(--ivoire); margin-top: 12px; border: 1px solid rgba(255, 247, 232, 0.14); }
 .btn-logout:hover { background: var(--danger); }
 
