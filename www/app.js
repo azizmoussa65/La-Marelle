@@ -1997,8 +1997,7 @@ const VUES = {
             ${appelFait.has(c.nom) ? ` · <span class="ko-texte">${nbAbs} absent(s)</span>` : ''} · ${nbCours} cours envoyé(s)</span></div>
           <span class="badge ${nbCours ? 'badge-ok' : 'badge-wait'}">${nbCours ? '📚 ✔' : '📚 à envoyer'}</span></div>`;
       }).join('') || vide('Aucune classe.')}</div>`)}
-      ${prochains.length ? carte('🎉 Prochains événements', `<div class="events-grid">${prochains.map(ev => carteEvenement(ev, false)).join('')}</div>`) : ''}
-      ${carte('🔔 Dernières notifications', listeNotifs(DB.notifications.slice(0, 4)))}`;
+      ${prochains.length ? carte('🎉 Prochains événements', `<div class="events-grid">${prochains.map(ev => carteEvenement(ev, false)).join('')}</div>`) : ''}`;
   },
 
   // ----- Espace Parents : accueil avec la photo de chaque enfant -----
