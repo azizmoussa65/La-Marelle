@@ -744,6 +744,21 @@ input.montant { width: 90px; padding: 7px 8px; border: 1px solid var(--border); 
 .event-body h4 { font-size: 17px; margin-top: 4px; }
 .event-body .btn { margin-top: 8px; }
 .event-card.passe { opacity: 0.65; }
+/* Compte à rebours : 4 cases aux couleurs de la marelle (jours, heures, minutes, secondes) */
+.compte-rebours { display: grid; grid-template-columns: repeat(4, 1fr); gap: 7px; width: 100%; margin: 6px 0 4px; }
+.cr-case {
+  display: flex; flex-direction: column; align-items: center; padding: 7px 2px 5px; border-radius: 12px;
+  border: 2px solid var(--case); background: var(--primary-light);
+  background: color-mix(in srgb, var(--case) 22%, var(--champ)); transform: rotate(-2deg);
+}
+.cr-case:nth-child(even) { transform: rotate(2deg); }
+.cr-case:nth-child(1) { --case: var(--case-rouge); }
+.cr-case:nth-child(2) { --case: var(--case-jaune); }
+.cr-case:nth-child(3) { --case: var(--case-vert); }
+.cr-case:nth-child(4) { --case: var(--case-violet); }
+.cr-val { font-family: var(--titre); font-size: 24px; font-weight: 800; line-height: 1.1; color: var(--sidebar); font-variant-numeric: tabular-nums; }
+.cr-case span { font-size: 10.5px; font-weight: 800; letter-spacing: 0.4px; text-transform: uppercase; color: var(--muted); }
+.cr-fini { width: 100%; grid-column: 1 / -1; text-align: center; font-family: var(--titre); font-size: 19px; font-weight: 700; color: var(--primary); }
 
 /* ================= RÉCLAMATIONS / RÉUNIONS ================= */
 .item {

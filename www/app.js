@@ -1455,13 +1455,49 @@ function supprimerEvenement(id) {
   action(api('/evenements/' + id, { method: 'DELETE' }), 'Événement supprimé');
 }
 function evenementsAVenir() { return DB.evenements.filter(ev => ev.date >= aujourdhui()).sort((a, b) => (a.date + a.heure).localeCompare(b.date + b.heure)); }
+// ----- Compte à rebours de chaque événement à venir : jours, heures, minutes, secondes, mis à jour chaque seconde -----
+// Heure de l'événement = heure de Tunis (UTC+1, pas d'heure d'été)
+const debutEvenement = ev => Date.parse(`${ev.date}T${/^\d{2}:\d{2}$/.test(ev.heure) ? ev.heure : '00:00'}:00+01:00`);
+function joursAvant(date) {
+  const n = Math.round((Date.parse(date + 'T12:00:00Z') - Date.parse(aujourdhui() + 'T12:00:00Z')) / 864e5);
+  return n === 0 ? "Aujourd'hui" : n === 1 ? 'Demain' : `Dans ${n} jours`;
+}
+function compteARebours(ev) {
+  setTimeout(majComptesARebours);   // chiffres remplis dès l'affichage
+  return `<div class="compte-rebours" data-cible="${debutEvenement(ev)}" role="timer" aria-label="Compte à rebours jusqu'à l'événement">
+    ${['Jours', 'Heures', 'Min', 'Sec'].map(l => `<div class="cr-case"><b class="cr-val">–</b><span>${l}</span></div>`).join('')}</div>`;
+}
+function majComptesARebours() {
+  document.querySelectorAll('.compte-rebours:not(.fini)').forEach(z => {
+    const reste = Number(z.dataset.cible) - Date.now();
+    if (reste <= 0) {
+      z.classList.add('fini');
+      z.innerHTML = `<p class="cr-fini">🎉 C'est parti !</p>`;
+      return;
+    }
+    const t = Math.floor(reste / 1000);
+    const valeurs = [Math.floor(t / 86400), Math.floor(t % 86400 / 3600), Math.floor(t % 3600 / 60), t % 60];
+    z.querySelectorAll('.cr-val').forEach((b, i) => {
+      const texte = i ? String(valeurs[i]).padStart(2, '0') : String(valeurs[i]);
+      if (b.textContent === texte) return;
+      const premier = b.textContent === '–';
+      b.textContent = texte;
+      // La case dont le chiffre change fait un petit saut (comme les cases de la marelle)
+      if (!premier && !MARELLE.calme) b.parentNode.animate([{ transform: 'translateY(-4px) scale(1.08)' }, { transform: 'none' }],
+        { duration: 260, easing: 'ease-out' });
+    });
+  });
+}
+setInterval(majComptesARebours, 1000);
+
 function carteEvenement(ev, gestion) {
   const passe = ev.date < aujourdhui();
   return `<div class="event-card ${passe ? 'passe' : ''}">
     ${ev.imageId ? `<img src="${urlFichier(ev.imageId)}" alt="" loading="lazy" onclick="voirPhoto('${urlFichier(ev.imageId)}')">` : '<div class="event-sans-image">🎉</div>'}
     <div class="event-body">
-      ${passe ? '<span class="badge badge-wait">Terminé</span>' : '<span class="badge badge-ok">À venir</span>'}
+      ${passe ? '<span class="badge badge-wait">Terminé</span>' : `<span class="badge badge-ok">${joursAvant(ev.date)}</span>`}
       <h4>${esc(ev.nom)}</h4>
+      ${passe ? '' : compteARebours(ev)}
       <p>📅 ${esc(dateLongue(ev.date))} · 🕒 ${esc(ev.heure)}</p>
       <p>📍 ${esc(ev.lieu)}</p>
       ${gestion && ev.creePar ? `<span class="small muted">Publié par ${esc(ev.creePar)}</span>` : ''}
