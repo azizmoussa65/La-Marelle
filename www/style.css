@@ -147,20 +147,39 @@ code { background: var(--doux); padding: 2px 6px; border-radius: 5px; font-size:
   animation: flotter var(--duree, 14s) linear var(--delai, 0s) infinite;
   will-change: transform;
 }
-/* « Bulles » en forme de cases de la marelle */
-.fond-anime .bulle { border-radius: 26%; background: rgba(255, 247, 232, 0.12); border: 2px solid rgba(255, 247, 232, 0.18); }
-.fond-anime .bulle.c0 { background: rgba(224, 54, 44, 0.35); border-color: rgba(255, 140, 130, 0.4); }
-.fond-anime .bulle.c1 { background: rgba(255, 210, 63, 0.35); border-color: rgba(255, 230, 140, 0.45); }
-.fond-anime .bulle.c2 { background: rgba(217, 60, 207, 0.35); border-color: rgba(240, 140, 230, 0.4); }
-.fond-anime .bulle.c3 { background: rgba(111, 209, 58, 0.35); border-color: rgba(170, 235, 130, 0.4); }
-.fond-anime .bulle.c4 { background: rgba(127, 224, 240, 0.35); border-color: rgba(180, 240, 250, 0.45); }
-.fond-anime .bulle.c5 { background: rgba(155, 76, 240, 0.4); border-color: rgba(200, 160, 250, 0.45); }
+/* Objets du fond : taille --t, nombre de tours --tour */
+.fond-anime span { font-size: var(--t); }
+/* Cases numérotées de la marelle, aux couleurs du logo */
+.fond-anime .case-num {
+  width: var(--t); height: var(--t); display: grid; place-items: center; border-radius: 26%;
+  font-family: var(--titre); font-weight: 800; font-size: calc(var(--t) * 0.55); color: var(--sidebar);
+  background: var(--fond-case); opacity: 0.88; box-shadow: 0 4px 0 rgba(0, 0, 0, 0.15);
+}
+.fond-anime .case-num.c0 { --fond-case: var(--case-rouge); }
+.fond-anime .case-num.c1 { --fond-case: var(--case-jaune); }
+.fond-anime .case-num.c2 { --fond-case: var(--case-rose); }
+.fond-anime .case-num.c3 { --fond-case: var(--case-vert); }
+.fond-anime .case-num.c4 { --fond-case: var(--case-cyan); }
+.fond-anime .case-num.c5 { --fond-case: var(--case-violet); }
+/* Petites marelles et lettres dessinées à la craie */
+.fond-anime .mini-marelle { width: var(--t); color: rgba(255, 247, 232, 0.5); }
+.fond-anime .mini-marelle svg { display: block; width: 100%; height: auto; }
+.fond-anime .craie {
+  font-family: var(--titre); font-weight: 700; line-height: 1; color: rgba(255, 247, 232, 0.45);
+  text-shadow: 0 0 6px rgba(255, 247, 232, 0.25);
+}
+/* Palet (le caillou qu'on lance sur la marelle) */
+.fond-anime .palet {
+  width: var(--t); height: var(--t); border-radius: 50%; opacity: 0.85;
+  background: radial-gradient(circle at 35% 30%, var(--ivoire) 0 10%, var(--orange-kids) 45%, #c4622a 100%);
+}
+.fond-anime .fourniture { opacity: 0.9; }
 @keyframes flotter {
   0% { transform: translate(0, 0) rotate(0deg); opacity: 0; }
   10% { opacity: 1; }
-  50% { transform: translate(var(--derive, 30px), -60vh) rotate(180deg); }
+  50% { transform: translate(var(--derive, 30px), -60vh) rotate(calc(var(--tour, 360deg) / 2)); }
   90% { opacity: 1; }
-  100% { transform: translate(0, -125vh) rotate(360deg); opacity: 0; }
+  100% { transform: translate(0, -125vh) rotate(var(--tour, 360deg)); opacity: 0; }
 }
 @keyframes carte-entree { from { opacity: 0; transform: translateY(40px) scale(0.96); } to { opacity: 1; transform: none; } }
 @keyframes logo-pop { from { opacity: 0; transform: scale(0.3) rotate(-12deg); } to { opacity: 1; transform: none; } }

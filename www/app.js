@@ -223,23 +223,32 @@ document.addEventListener('gesturechange', e => e.preventDefault());
 document.addEventListener('touchmove', e => { if (e.touches.length > 1) e.preventDefault(); }, { passive: false });
 
 // ================= ÉCRAN DE CONNEXION ANIMÉ =================
-// Fournitures scolaires, étoiles et bulles aux couleurs de la marelle qui montent doucement derrière la carte
+// Derrière la carte montent doucement : les cases numérotées de la marelle (couleurs du logo), de petites marelles
+// dessinées à la craie, des lettres et chiffres à la craie, des palets et quelques fournitures scolaires
 (function animerConnexion() {
   const fond = $('fond-anime');
   if (!fond || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-  const objets = ['✏️', '📚', '⭐', '🎒', '🧸', '🎨', '🔤', '🔢', '🌟', '📖', '🎈', '🖍️', '🧩', '✨', '🌈', '🚀'];
   const hasard = (min, max) => min + Math.random() * (max - min);
-  let html = '';
-  objets.forEach((o, i) => {
-    html += `<span style="left:${(i * 100 / objets.length + hasard(0, 5)).toFixed(1)}%;font-size:${hasard(22, 40).toFixed(0)}px;`
-      + `--duree:${hasard(12, 22).toFixed(1)}s;--delai:-${hasard(0, 20).toFixed(1)}s;--derive:${hasard(-60, 60).toFixed(0)}px">${o}</span>`;
-  });
-  for (let i = 0; i < 14; i++) {
-    const t = hasard(18, 64).toFixed(0);
-    html += `<span class="bulle ${i < 12 ? 'c' + (i % 6) : ''}" style="left:${hasard(0, 95).toFixed(1)}%;width:${t}px;height:${t}px;`
-      + `--duree:${hasard(14, 26).toFixed(1)}s;--delai:-${hasard(0, 24).toFixed(1)}s;--derive:${hasard(-40, 40).toFixed(0)}px"></span>`;
-  }
-  fond.innerHTML = html;
+  // Petite marelle dessinée à la craie : ciel + cases 1 à 6
+  const marelle = `<svg viewBox="0 0 60 120" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round" aria-hidden="true">
+    <path d="M8 22 A22 22 0 0 1 52 22 Z"/><rect x="8" y="22" width="22" height="20"/><rect x="30" y="22" width="22" height="20"/>
+    <rect x="19" y="42" width="22" height="20"/><rect x="8" y="62" width="22" height="20"/><rect x="30" y="62" width="22" height="20"/>
+    <rect x="19" y="82" width="22" height="20"/>
+    <g fill="currentColor" stroke="none" font-family="Baloo 2, sans-serif" font-size="12" font-weight="700" text-anchor="middle">
+      <text x="19" y="36">5</text><text x="41" y="36">6</text><text x="30" y="56">4</text>
+      <text x="19" y="76">2</text><text x="41" y="76">3</text><text x="30" y="96">1</text></g></svg>`;
+  const objets = [
+    ...Array.from({ length: 10 }, (_, i) => ({ classe: `case-num c${i % 6}`, contenu: i + 1, taille: [30, 52], tour: 40 })),
+    ...[0, 1, 2].map(() => ({ classe: 'mini-marelle', contenu: marelle, taille: [44, 70], tour: 50 })),
+    ...['A', 'B', 'C', 'a', 'b', '1', '2', '3', 'أ', 'ب', 'ت'].map(l => ({ classe: 'craie', contenu: l, taille: [26, 46], tour: 30 })),
+    ...[0, 1, 2].map(() => ({ classe: 'palet', contenu: '', taille: [16, 26] })),
+    ...['✏️', '📚', '🖍️', '🎒', '📐', '🧮'].map(o => ({ classe: 'fourniture', contenu: o, taille: [24, 36], tour: 200 }))
+  ].sort(() => Math.random() - 0.5);
+  fond.innerHTML = objets.map((o, i) => {
+    const t = hasard(...o.taille).toFixed(0);
+    return `<span class="${o.classe}" style="left:${(i * 100 / objets.length + hasard(0, 3)).toFixed(1)}%;--t:${t}px;--tour:${o.tour || 360}deg;`
+      + `--duree:${hasard(13, 24).toFixed(1)}s;--delai:-${hasard(0, 24).toFixed(1)}s;--derive:${hasard(-50, 50).toFixed(0)}px">${o.contenu}</span>`;
+  }).join('');
   // Phrases d'accueil qui changent toutes les 3 secondes
   const phrases = ['Bienvenue à La Marelle Kids 👋', 'Apprendre en s\'amusant 🎨', 'Suivez la journée de vos enfants 🧸',
     'Chaque jour, un peu plus grand 🌱', 'Ensemble vers la réussite 🏆'];
